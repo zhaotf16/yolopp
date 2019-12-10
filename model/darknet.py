@@ -87,12 +87,12 @@ class Darknet19(tf.keras.Model):
 
     def call(self, input, training=False):
         x = self.conv1(input)
-        x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.conv4(x)
-        x = self.conv5(x)
-        x = self.conv6(x)
-        x = self.conv7(x)
+        x = self.conv2(x, training=training)
+        x = self.conv3(x, training=training)
+        x = self.conv4(x, training=training)
+        x = self.conv5(x, training=training)
+        x = self.conv6(x, training=training)
+        x = self.conv7(x, training=training)
         return x
 
 if __name__ == '__main__':
