@@ -1,6 +1,8 @@
 import tensorflow as tf
 from darknet import Darknet19, DarknetConv_BN_Leaky
 
+anchor = tf.constant([[160, 160]], dtype=tf.float32) / 1024
+
 class PhosaurusNet(Darknet19):
     def __init__(self):
         super().__init__()
@@ -39,13 +41,115 @@ class PhosaurusNet(Darknet19):
         x = self.conv7(x, training=training)
         return x
 
-if __name__ == '__main__':
-    #this is a test to check if network is able to run
+def yolo_head(features):
+    grid_size = tf.shape(features)[1]
+    box_xy, box_wh, confidence = tf.split(features, (2, 2, 1), axis=-1)
+
+    box_xy = tf.sigmoid(box_xy)
+    box_wh = tf.exp(box_wh)
+    confidence = tf.sigmoid(confidence)
+
+    meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
+    meshgrid = tf.stack(meshgrid, axis=-1)
+    meshgrid = tf.expand_dims(meshgrid, axis=0)
+
+    box_xy = (box_xy + tf.cast(meshgrid, tf.float32)) / tf.cast(grid_size, tf.float32)
+    #here anchor is a relative box to the whole page: eg. 160/1024. no need to divide a gridsize
+    box_wh = box_wh * anchor
+
+    return box_xy, box_wh, confidence
+
+
+def broadcast_iou(box_1, box_2):
+    # box_1: (..., (x1, y1, x2, y2))
+    # box_2: (N, (x1, y1, x2, y2))
+
+    box_1 = tf.expand_dims(box_1, -2)
+    box_2 = tf.expand_dims(box_2, 0)
+    # new_shape: (..., N, (x1, y1, x2, y2))
+    new_shape = tf.broadcast_dynamic_shape(tf.shape(box_1), tf.shape(box_2))
+    box_1 = tf.broadcast_to(box_1, new_shape)
+    box_2 = tf.broadcast_to(box_2, new_shape)
+
+    w = tf.maximum(tf.minimum(box_1[..., 2], box_2[..., 2]) -
+                   tf.maximum(box_1[..., 0], box_2[..., 0]), 0)
+    h = tf.maximum(tf.minimum(box_1[..., 3], box_2[..., 3]) -
+                   tf.maximum(box_1[..., 1], box_2[..., 1]), 0)
+    intersection = w * h
+    box_1_area = (box_1[..., 2] - box_1[..., 0]) * \
+                 (box_1[..., 3] - box_1[..., 1])
+    box_2_area = (box_2[..., 2] - box_2[..., 0]) * \
+                 (box_2[..., 3] - box_2[..., 1])
+    return intersection / (box_1_area + box_2_area - intersection)
+
+def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
+    #y_pred: yolo_output [batch, grid, grid, (x, y, w, h, confidence)]
+    #y_true: true_boxes [batch, grid, grid, (x, y, w, h, confidence)]
+    #y_true is relative to the whole image, and so is anchor
+
+    object_scale = 5
+    no_object_scale = 1
+    coordinates_scale = 1
+
+    #pred_xy and true_xy are ratio the whole meshgrid and input_image
+    pred_xy, pred_wh, pred_confidence = yolo_head(y_pred)
+    pred_x1y1 = pred_xy - pred_wh / 2
+    pred_x2y2 = pred_xy + pred_wh / 2
+    pred_box = tf.concat((pred_x1y1, pred_x2y2), axis=-1)
+
+    true_xywh, true_confidence = tf.split(y_true, (4, 1), axis=-1)
+    true_xy, true_wh = true_xywh[..., 0:2], true_xywh[..., 2:4]
+    true_x1y1 = true_xy - true_wh / 2
+    true_x2y2 = true_xy + true_wh / 2
+    true_box = tf.concat((true_x1y1, true_x2y2), axis=-1)
+
+    grid_size = tf.shape(y_true)[1]
+    meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
+    meshgrid = tf.stack(meshgrid, axis=-1)
+    meshgrid = tf.expand_dims(meshgrid, axis=0)
+
+    true_xy = true_xy * tf.cast(grid_size, tf.float32) - tf.cast(meshgrid, tf.float32)
+    true_wh = tf.math.log(true_wh / anchor)
+    true_wh = tf.where(tf.math.is_inf(true_wh), tf.zeros_like(true_wh), true_wh)
+
+    mask = tf.squeeze(true_confidence, axis=-1)
+    true_box = tf.boolean_mask(true_box, tf.cast(mask, tf.bool))
+    best_iou = tf.reduce_max(broadcast_iou(pred_box, true_box), axis=-1)
+    ignore_mask = tf.cast(best_iou < ignore_threshold, tf.float32)
+
+    xy_loss = mask * coordinates_scale * \
+              tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
+    wh_loss = mask * coordinates_scale * \
+              tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
+    xy_loss = tf.reduce_sum(xy_loss, axis=(1, 2))
+    wh_loss = tf.reduce_sum(wh_loss, axis=(1, 2))
+    obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
+    obj_loss = mask * obj_loss + (1 - mask) * obj_loss * ignore_mask
+    obj_loss = tf.reduce_sum(obj_loss, axis=(1, 2))
+
+    return xy_loss + wh_loss + obj_loss
+    #print(iou_score)
+
+def non_max_suppression():
+    pass
+
+def PhosaurusNet_test():
+    # this is a test to check if network is able to run
     import numpy as np
     x = np.random.uniform(0, 1, [1024, 1024])
     x = np.expand_dims(x.astype(np.float32), axis=-1)
     x = np.expand_dims(x, axis=0)
     model = PhosaurusNet()
-    y = model(x, training=True)
-    print(y.shape)
-    model.summary()
+    y_pred = model(x, training=True)
+    #print(y.shape)
+    y_true = np.random.uniform(0, 1, [64, 64, 5])
+    y_true = np.expand_dims(y_true.astype(np.float32), axis=0)
+
+    yolo_loss(y_pred, y_true)
+    #print(y.shape)
+    #model.summary()
+    #box_xy, box_wh, confidence = yolo_head(y)
+    #print(box_xy.shape, box_wh.shape, confidence.shape)
+
+if __name__ == '__main__':
+   PhosaurusNet_test()
