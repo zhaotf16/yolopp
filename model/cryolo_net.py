@@ -1,6 +1,14 @@
 import tensorflow as tf
-from darknet import Darknet19, DarknetConv_BN_Leaky
+from model.darknet import Darknet19, DarknetConv_BN_Leaky
 
+#Local settings
+gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
+cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
+print(gpus, cpus)
+tf.config.experimental.set_virtual_device_configuration(
+    gpus[-1],
+    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
+)
 anchor = tf.constant([[160, 160]], dtype=tf.float32) / 1024
 
 class PhosaurusNet(Darknet19):
@@ -145,7 +153,7 @@ def PhosaurusNet_test():
     y_true = np.random.uniform(0, 1, [64, 64, 5])
     y_true = np.expand_dims(y_true.astype(np.float32), axis=0)
 
-    yolo_loss(y_pred, y_true)
+    return yolo_loss(y_pred, y_true)
     #print(y.shape)
     #model.summary()
     #box_xy, box_wh, confidence = yolo_head(y)
