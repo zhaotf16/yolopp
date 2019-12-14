@@ -50,6 +50,9 @@ class PhosaurusNet(Darknet19):
         return x
 
 def yolo_head(features):
+    #the output of cnn is (tx, ty, tw, th, confidence)
+    #tx, ty are relative to a single cell, thus we use sigmoid() plus offset
+    #to gain their values relatvie to the whole meshgrid.(used in drawing boxes)
     grid_size = tf.shape(features)[1]
     box_xy, box_wh, confidence = tf.split(features, (2, 2, 1), axis=-1)
 
@@ -65,7 +68,11 @@ def yolo_head(features):
     #here anchor is a relative box to the whole page: eg. 160/1024. no need to divide a gridsize
     box_wh = box_wh * anchor
 
-    return box_xy, box_wh, confidence
+    box_x1y1 = box_xy - box_wh / 2
+    box_x2y2 = box_xy + box_wh / 2
+    pred_box = tf.concat((box_x1y1, box_x2y2), axis=-1)
+
+    return pred_box, confidence
 
 
 def broadcast_iou(box_1, box_2):
@@ -95,18 +102,15 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     #y_true: true_boxes [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true is relative to the whole image, and so is anchor
 
-    object_scale = 5
-    no_object_scale = 1
-    coordinates_scale = 1
-
-    #pred_xy and true_xy are ratio the whole meshgrid and input_image
-    pred_xy, pred_wh, pred_confidence = yolo_head(y_pred)
-    pred_x1y1 = pred_xy - pred_wh / 2
-    pred_x2y2 = pred_xy + pred_wh / 2
-    pred_box = tf.concat((pred_x1y1, pred_x2y2), axis=-1)
-
-    true_xywh, true_confidence = tf.split(y_true, (4, 1), axis=-1)
-    true_xy, true_wh = true_xywh[..., 0:2], true_xywh[..., 2:4]
+    coordinates_scale = 5
+    no_object_scale = 0.5
+    #pred_xy is ratio to a single cell
+    pred_xy, pred_wh = y_pred[..., 0:2], y_pred[..., 2:4]
+    pred_xy = tf.sigmoid(pred_xy)
+    #box_xy and true_xy are ratio the whole meshgrid and input_image
+    pred_box, pred_confidence = yolo_head(y_pred)
+    
+    true_xy, true_wh, true_confidence = tf.split(y_true, (2, 2, 1), axis=-1)
     true_x1y1 = true_xy - true_wh / 2
     true_x2y2 = true_xy + true_wh / 2
     true_box = tf.concat((true_x1y1, true_x2y2), axis=-1)
@@ -119,7 +123,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     true_xy = true_xy * tf.cast(grid_size, tf.float32) - tf.cast(meshgrid, tf.float32)
     true_wh = tf.math.log(true_wh / anchor)
     true_wh = tf.where(tf.math.is_inf(true_wh), tf.zeros_like(true_wh), true_wh)
-
+    #print(true_xy)
     mask = tf.squeeze(true_confidence, axis=-1)
     true_box = tf.boolean_mask(true_box, tf.cast(mask, tf.bool))
     best_iou = tf.reduce_max(broadcast_iou(pred_box, true_box), axis=-1)
@@ -132,7 +136,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     xy_loss = tf.reduce_sum(xy_loss, axis=(1, 2))
     wh_loss = tf.reduce_sum(wh_loss, axis=(1, 2))
     obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
-    obj_loss = mask * obj_loss + (1 - mask) * obj_loss * ignore_mask
+    obj_loss = mask * obj_loss + no_object_scale * (1 - mask) * obj_loss * ignore_mask
     obj_loss = tf.reduce_sum(obj_loss, axis=(1, 2))
 
     return xy_loss + wh_loss + obj_loss
