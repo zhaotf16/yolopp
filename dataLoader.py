@@ -34,15 +34,7 @@ def preprocess(inputs, use_factor=False, para1=None, para2=None):
 
     return inputs
 
-def label2array(labels, origin_shape, target_shape):
-    #origin_shape is a tuple(image_height, image_width)
-    #target_shape is a tuple(grid_size, grid_size)
-    label_array = np.zeros((
-        1, target_shape[0], target_shape[1], 5
-    ), dtype=np.float32)
-    for i in range(len(labels)):
-        x_index = labels[i][0] // target_shape[0],
-        y_index = labels[i][1] // target_shape[1],
+
 
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
