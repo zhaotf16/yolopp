@@ -1,46 +1,23 @@
 import os
-import mrc
+import mrcHelper
+import starHelper
 import numpy as np
 
-class MrcData():
-    def __init__(self, name, data, label):
-        #info is a tuple:(data, header, extend_header)
-        self.name = name
-        self.data = data
-        #self.data = info[0]
-        #self.header = info[1]
-        #self.extend_header = info[2]
-        self.label = label
-
-
-def load_mrc_file(path):
-    if not os.path.isdir(path):
-        print(path, " is not a valid directory")
-        return
-    if not path.endswith('/'):
-        path += '/'
-        mrc_data = []
-    for file in os.listdir(path):
-        if file.endswith('.mrc'):
-            print("Loading %s ..." % (file))
-            with open(path+file, "rb") as f:
-                content = f.read()
-            data, header, extend_header = mrc.parse(content=content)
-            name = file
-            # TODO: load and process label according to STAR or EMAN
-            mrc_data.append(MrcData(name=file, data=data, label=""))
-    return mrc_data
+class MSData():
+    def __init__(self, mrc_data, star_data):
+        self.mrc_data = mrc_data
+        self.star_data = star_data
 
 def preprocess(inputs, use_factor=False, para1=None, para2=None):
     #This method executes a downsampling on the mrc
     #Inputs is a list of MrcData
     #If use_factor is True, para1 represents factor and para2 represents shape
     #Else para1 and para2 represents the target size(y, x)
-    print(type(inputs[0]))
+    
     for i in range(len(inputs)):
         if use_factor:
             print("Prcocessing %s ..." % ( inputs[i].name))
-            inputs[i].data = mrc.downsample_with_factor(
+            inputs[i].data = mrcHelper.downsample_with_factor(
                 inputs[i].data,
                 factor=para1,
                 shape=para2
@@ -48,7 +25,7 @@ def preprocess(inputs, use_factor=False, para1=None, para2=None):
             #TODO: fix labels for the downsampled micrographs
         else:
             print("Prcocessing %s ..." % (inputs[i].name))
-            inputs[i].data = mrc.downsample_with_size(
+            inputs[i].data = mrcHelper.downsample_with_size(
                 inputs[i].data,
                 size1=para1,
                 size2=para2
@@ -57,27 +34,34 @@ def preprocess(inputs, use_factor=False, para1=None, para2=None):
 
     return inputs
 
-def write_mrc(inputs, dst):
-    if not os.path.exists(dst):
-        os.mkdir(dst)
-    if not dst.endswith('/'):
-        dst += '/'
-
-    #for mrc_data in inputs:
-    for mrc_data in inputs:
-        print(type(mrc_data))
-        print("Writing %s ..." % (mrc_data.name))
-        data = np.expand_dims(mrc_data.data, axis=0)
-        with open(dst+mrc_data.name, "wb") as f:
-            mrc.write(f, data)
+def label2array(labels, origin_shape, target_shape):
+    #origin_shape is a tuple(image_height, image_width)
+    #target_shape is a tuple(grid_size, grid_size)
+    label_array = np.zeros((
+        1, target_shape[0], target_shape[1], 5
+    ), dtype=np.float32)
+    for i in range(len(labels)):
+        x_index = labels[i][0] // target_shape[0],
+        y_index = labels[i][1] // target_shape[1],
 
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
-    path = "../topaz/data/EMPIAR-10025/rawdata/micrographs"
+    path = "../data/EMPIAR-10025/rawdata/micrographs"
     #path = "../stack_0001_DW"
-    dst = "./dataset"
-
-    data = load_mrc_file(path)
-    data = preprocess(data, False, para1=1024, para2=1024)
-    print(data)
-    write_mrc(data, dst=dst)
+    #dst = "../dataset/EMPIAR-10025/processed/micrographs"
+    data = mrcHelper.load_mrc_file(path)
+    label = starHelper.read_all_star("../dataset/EMPIAR-10025/rawdata/label_for_training")
+    downsampled_data = preprocess(data, False, para1=1024, para2=1024)
+    #data = preprocess(data, False, para1=1024, para2=1024)
+    downsampled_label = []
+    for i in range(len(label)):
+        name = label[i].name
+        content = starHelper.downsample_with_size(
+            label[i].content,
+            (1024 / data[i].header[1], 1024 / data[i].header[0])
+        )
+        downsampled_label.append(starHelper.StarData(name, content))
+    
+    
+    #label = star.downsample_with_size()
+    #mrc.write_mrc(data, dst=dst)
