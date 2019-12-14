@@ -25,7 +25,7 @@ def train():
     optimizer = tf.optimizers.Adam(learning_rate=0.01)
     for i in range(3):
         print()
-    epochs = 5
+    epochs = 10
     for e in range(epochs):
         with tf.GradientTape() as tape:
             y_pred = net(x, training=True)
