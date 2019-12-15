@@ -290,3 +290,15 @@ def downsample_with_size(x, size1, size2):
     f = np.fft.irfft2(F, s=(size1,size2))
 
     return f.astype(x.dtype)
+
+def write_mrc(inputs, dst):
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+    if not dst.endswith('/'):
+        dst += '/'
+    #for mrc_data in inputs:
+    for mrc_data in inputs:
+        print("Writing %s.mrc ..." % (mrc_data.name))
+        data = np.expand_dims(mrc_data.data, axis=0)
+        with open(dst+mrc_data.name+'.mrc', "wb") as f:
+            write(f, data)
