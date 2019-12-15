@@ -4,7 +4,7 @@ import struct
 from collections import namedtuple
 
 #This file is copied from TopaZ:mrc.py and TopaZ:image.py
-#I dont think I need to write another mrc-reader
+#I add some extra functions to fit my task
 
 # int nx
 # int ny
