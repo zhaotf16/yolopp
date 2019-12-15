@@ -1,7 +1,10 @@
+import mrcHelper
+import starHelper
+import dataLoader
+import numpy as np
+import tensorflow as tf
 import model.darknet as dn
 import model.cryolo_net as cn
-import tensorflow as tf
-
 #Local settings
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
@@ -12,28 +15,36 @@ tf.config.experimental.set_virtual_device_configuration(
 )
 
 def train():
-    import numpy as np
-    x = np.random.uniform(0, 1, [4, 224, 224])
-    x = np.expand_dims(x.astype(np.float32), axis=-1)
-    #x = np.expand_dims(x, axis=0)
-    net = cn.PhosaurusNet()
-    #y_pred = model(x, training=True)
-    #print(y.shape)
-    y_true = np.random.uniform(0, 1, [4, 14, 14, 5])
-    y_true = y_true.astype(np.float32)
+    data_path = "../dataset/EMPIAR-10025/processed/micrographs"
+    label_path = "../dataset/EMPIAR-10025/processed/labels"
+    #path = "../stack_0001_DW"
+    #dst = "../dataset/EMPIAR-10025/processed/micrographs"
+    #dst1 = "../dataset/EMPIAR-10025/processed/labels"
+    mrc = mrcHelper.load_mrc_file(data_path)
+    star = starHelper.read_all_star(label_path)
+    
+    array = dataLoader.mrc2array(mrc, image_size=1024)
+    array = np.expand_dims(array, axis=1)
+    label = dataLoader.star2label(star, 1024)
 
-    optimizer = tf.optimizers.Adam(learning_rate=0.01)
-    for i in range(3):
-        print()
+    batchsize = 1
     epochs = 10
+    learning_rate = 0.1
+    net = cn.PhosaurusNet()
+    optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
+
     for e in range(epochs):
-        with tf.GradientTape() as tape:
-            y_pred = net(x, training=True)
-            loss = cn.yolo_loss(y_pred, y_true)
-            loss = tf.reduce_mean(loss)
-        print(loss)
-        grads = tape.gradient(loss, net.trainable_variables)
-        optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
+        batch_num = array.shape[0] // batchsize
+        for i in range(batch_num):
+            x = array[i+batchsize-1, ...]
+            y_true = label[i+batchsize-1, ...]
+            with tf.GradientTape() as tape:
+                y_pred = net(x, training=True)
+                loss = cn.yolo_loss(y_pred, y_true)
+                loss = tf.reduce_mean(loss)
+            print("epoch: %d\tbatch: %d\t loss: %f" % (e+1, i+1, loss))
+            grads = tape.gradient(loss, net.trainable_variables)
+            optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
     
 if __name__ == '__main__':
     train()
