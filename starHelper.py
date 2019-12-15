@@ -27,7 +27,7 @@ def read_star(path):
                 continue
             content = line.split()
            
-            coordinates.append((float(content[x_index]), float(content[y_index])))
+            coordinates.append((int(content[x_index]), int(content[y_index])))
 
     return coordinates
 
@@ -41,7 +41,7 @@ def read_all_star(path):
     for file in os.listdir(path):
         if file.endswith('.star'):
             name, _ = os.path.splitext(file)
-            print("Loading %s ..." % (name))
+            print("Loading %s.star ..." % (name))
             content = read_star(path + file)
             stars.append(StarData(name, content))
     return stars
@@ -57,7 +57,20 @@ def downsample_with_size(coordinates, scale):
     return downsampled
 
 def write_star(inputs, dst):
-    pass
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+    if not dst.endswith('/'):
+        dst += '/'
+    #for mrc_data in inputs:
+    for star_data in inputs:
+        print("Writing %s.star ..." % (star_data.name))
+        with open(dst+star_data.name+'.star', "w") as f:
+            f.write('data_\n')
+            f.write('loop_\n')
+            f.write('_rlnCoordinateX #1\n')
+            f.write('_rlnCoordinateX #2\n')
+            for item in star_data.content:
+                f.write("%d\t%d\n" % (item[0], item[1]))
 
 if __name__ == '__main__':
     path = '../dataset/EMPIAR-10025/rawdata/label_for_training/'
