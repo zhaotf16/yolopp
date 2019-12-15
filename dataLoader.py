@@ -34,26 +34,51 @@ def preprocess(inputs, use_factor=False, para1=None, para2=None):
 
     return inputs
 
+def star2label(inputs, image_size, grid_size=64, particle_size=160):
+    #inputs is a list of StarData
+    label = np.zeros(
+        (len(inputs), grid_size, grid_size, 5), 
+        dtype=np.float32
+    )
+    grid_scale = image_size // grid_size
+    for i in range(len(inputs)):
+        for coord in inputs[i].content:
+            x_index = int(coord[0] - 1) // grid_scale
+            y_index = int(coord[1] - 1) // grid_scale
+            label[i, x_index, y_index, 0] = coord[0] / image_size
+            label[i, x_index, y_index, 1] = coord[1] / image_size
+            label[i, x_index, y_index, 2:3] = particle_size / image_size
+            label[i, x_index, y_index, 4] = 1.0
+    return label
 
+def mrc2array(inputs, image_size):
+    #inputs is a list of MrcData
+    array = np.zeros(
+        (len(inputs), image_size, image_size, 1),
+        dtype=np.float32
+    )
+    for i in range(len(inputs)):
+        array[i,...] = np.expand_dims(inputs[i].data.astype(np.float32), axis=-1)
+    return array
 
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
     path = "../data/EMPIAR-10025/rawdata/micrographs"
     #path = "../stack_0001_DW"
-    #dst = "../dataset/EMPIAR-10025/processed/micrographs"
+    dst = "../dataset/EMPIAR-10025/processed/micrographs"
+    dst1 = "../dataset/EMPIAR-10025/processed/labels"
     data = mrcHelper.load_mrc_file(path)
     label = starHelper.read_all_star("../dataset/EMPIAR-10025/rawdata/label_for_training")
-    downsampled_data = preprocess(data, False, para1=1024, para2=1024)
-    #data = preprocess(data, False, para1=1024, para2=1024)
+    #downsampled_data = preprocess(data, False, para1=1024, para2=1024)
+    data = preprocess(data, False, para1=1024, para2=1024)
     downsampled_label = []
     for i in range(len(label)):
         name = label[i].name
         content = starHelper.downsample_with_size(
             label[i].content,
-            (1024 / data[i].header[1], 1024 / data[i].header[0])
+            (1024 / 7420, 1024 / 7676)
         )
         downsampled_label.append(starHelper.StarData(name, content))
     
-    
-    #label = star.downsample_with_size()
-    #mrc.write_mrc(data, dst=dst)
+    mrcHelper.write_mrc(data, dst=dst)
+    starHelper.write_star(downsampled_label, dst=dst1)
