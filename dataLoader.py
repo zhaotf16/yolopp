@@ -34,7 +34,7 @@ def preprocess(inputs, use_factor=False, para1=None, para2=None):
 
     return inputs
 
-def star2label(inputs, image_size, grid_size=64, particle_size=160):
+def star2label(inputs, image_size, grid_size=64, particle_size=220):
     #inputs is a list of StarData
     label = np.zeros(
         (len(inputs), grid_size, grid_size, 5), 
@@ -47,7 +47,8 @@ def star2label(inputs, image_size, grid_size=64, particle_size=160):
             y_index = int(coord[1] - 1) // grid_scale
             label[i, x_index, y_index, 0] = coord[0] / image_size
             label[i, x_index, y_index, 1] = coord[1] / image_size
-            label[i, x_index, y_index, 2:3] = particle_size / image_size
+            label[i, x_index, y_index, 2] = particle_size[0] / image_size
+            label[i, x_index, y_index, 3] = particle_size[1] / image_size
             label[i, x_index, y_index, 4] = 1.0
     return label
 
