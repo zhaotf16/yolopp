@@ -9,7 +9,7 @@ tf.config.experimental.set_virtual_device_configuration(
     gpus[-1],
     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
 )
-anchor = tf.constant([[160, 160]], dtype=tf.float32) / 1024
+anchor = tf.constant([[80., 80.]], dtype=tf.float32) / 1024
 
 class PhosaurusNet(Darknet19):
     def __init__(self):
@@ -101,8 +101,8 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     #y_pred: yolo_output [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true: true_boxes [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true is relative to the whole image, and so is anchor
-
-    coordinates_scale = 5
+    object_scale = 5
+    coordinates_scale = 1
     no_object_scale = 0.5
     #pred_xy is ratio to a single cell
     pred_xy, pred_wh = y_pred[..., 0:2], y_pred[..., 2:4]
@@ -117,13 +117,32 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
 
     grid_size = tf.shape(y_true)[1]
     meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
-    meshgrid = tf.stack(meshgrid, axis=-1)
+    #meshgrid = tf.stack(meshgrid, axis=-1)
+    grid, coord = meshgrid[0], meshgrid[1]
+    grid, coord = tf.transpose(grid), tf.transpose(coord)
+    grid, coord = tf.expand_dims(grid, axis=-1), tf.expand_dims(coord, axis=-1)
+    meshgrid = tf.concat((grid, coord), axis=-1)
     meshgrid = tf.expand_dims(meshgrid, axis=0)
+    #debug:
+    #mask = tf.squeeze(true_confidence, axis=-1)
+    #pred_x = tf.expand_dims(pred_xy[..., 0] * mask, axis=-1)
+    #pred_y = tf.expand_dims(pred_xy[..., 1] * mask, axis=-1)
+    #pred_xy = tf.concat((pred_x, pred_y), axis=-1)
+   
+    #print(tf.reduce_mean(pred_xy), tf.reduce_mean(true_xy))
+    #true_xy = true_xy * tf.cast(grid_size, tf.float32) - tf.cast(meshgrid, tf.float32)
+    #debug:
+    #true_x = tf.expand_dims(true_xy[..., 0] * mask, axis=-1)
+    #true_y = tf.expand_dims(true_xy[..., 1] * mask, axis=-1)
+    #true_xy = tf.concat((true_x, true_y), axis=-1)
+    #print(tf.reduce_min(pred_xy), tf.reduce_max(true_xy))
+    #res = true_xy - pred_xy
+    #print(tf.reduce_max(res), tf.reduce_min(res))
+    #print(tf.reduce_max(tf.square(res)))
 
-    true_xy = true_xy * tf.cast(grid_size, tf.float32) - tf.cast(meshgrid, tf.float32)
     true_wh = tf.math.log(true_wh / anchor)
     true_wh = tf.where(tf.math.is_inf(true_wh), tf.zeros_like(true_wh), true_wh)
-    #print(true_xy)
+    
     mask = tf.squeeze(true_confidence, axis=-1)
     true_box = tf.boolean_mask(true_box, tf.cast(mask, tf.bool))
     best_iou = tf.reduce_max(broadcast_iou(pred_box, true_box), axis=-1)
@@ -135,12 +154,16 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
               tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
     xy_loss = tf.reduce_sum(xy_loss, axis=(1, 2))
     wh_loss = tf.reduce_sum(wh_loss, axis=(1, 2))
-    obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
-    obj_loss = mask * obj_loss + no_object_scale * (1 - mask) * obj_loss * ignore_mask
+    #debug:
+    obj_loss = tf.reduce_sum(tf.square(true_confidence - pred_confidence), axis=-1)
+    #obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
+    obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss * ignore_mask
     obj_loss = tf.reduce_sum(obj_loss, axis=(1, 2))
 
-    return xy_loss + wh_loss + obj_loss
-    #print(iou_score)
+    #debug:
+    return xy_loss, wh_loss, obj_loss
+    #return xy_loss + wh_loss + obj_loss
+
 
 def non_max_suppression():
     pass
