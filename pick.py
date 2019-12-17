@@ -41,7 +41,7 @@ def pick(argv):
     for i in range(batch_num):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
-        y_pred = net(x, training=True)
+        y_pred = net(x, training=False)
     
     #format of output files is STAR
     stars = []
