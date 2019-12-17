@@ -60,8 +60,15 @@ def yolo_head(features):
     box_wh = tf.exp(box_wh)
     confidence = tf.sigmoid(confidence)
 
+    #meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
+    #meshgrid = tf.stack(meshgrid, axis=-1)
+    #meshgrid = tf.expand_dims(meshgrid, axis=0)
+    #debug:
     meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
-    meshgrid = tf.stack(meshgrid, axis=-1)
+    grid, coord = meshgrid[0], meshgrid[1]
+    grid, coord = tf.transpose(grid), tf.transpose(coord)
+    grid, coord = tf.expand_dims(grid, axis=-1), tf.expand_dims(coord, axis=-1)
+    meshgrid = tf.concat((grid, coord), axis=-1)
     meshgrid = tf.expand_dims(meshgrid, axis=0)
 
     box_xy = (box_xy + tf.cast(meshgrid, tf.float32)) / tf.cast(grid_size, tf.float32)
@@ -117,29 +124,12 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
 
     grid_size = tf.shape(y_true)[1]
     meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
-    #meshgrid = tf.stack(meshgrid, axis=-1)
     grid, coord = meshgrid[0], meshgrid[1]
     grid, coord = tf.transpose(grid), tf.transpose(coord)
     grid, coord = tf.expand_dims(grid, axis=-1), tf.expand_dims(coord, axis=-1)
     meshgrid = tf.concat((grid, coord), axis=-1)
     meshgrid = tf.expand_dims(meshgrid, axis=0)
-    #debug:
-    #mask = tf.squeeze(true_confidence, axis=-1)
-    #pred_x = tf.expand_dims(pred_xy[..., 0] * mask, axis=-1)
-    #pred_y = tf.expand_dims(pred_xy[..., 1] * mask, axis=-1)
-    #pred_xy = tf.concat((pred_x, pred_y), axis=-1)
-   
-    #print(tf.reduce_mean(pred_xy), tf.reduce_mean(true_xy))
-    #true_xy = true_xy * tf.cast(grid_size, tf.float32) - tf.cast(meshgrid, tf.float32)
-    #debug:
-    #true_x = tf.expand_dims(true_xy[..., 0] * mask, axis=-1)
-    #true_y = tf.expand_dims(true_xy[..., 1] * mask, axis=-1)
-    #true_xy = tf.concat((true_x, true_y), axis=-1)
-    #print(tf.reduce_min(pred_xy), tf.reduce_max(true_xy))
-    #res = true_xy - pred_xy
-    #print(tf.reduce_max(res), tf.reduce_min(res))
-    #print(tf.reduce_max(tf.square(res)))
-
+    
     true_wh = tf.math.log(true_wh / anchor)
     true_wh = tf.where(tf.math.is_inf(true_wh), tf.zeros_like(true_wh), true_wh)
     
@@ -154,7 +144,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
               tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)
     xy_loss = tf.reduce_sum(xy_loss, axis=(1, 2))
     wh_loss = tf.reduce_sum(wh_loss, axis=(1, 2))
-    #debug:
+    
     obj_loss = tf.reduce_sum(tf.square(true_confidence - pred_confidence), axis=-1)
     #obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
     obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss * ignore_mask
@@ -164,9 +154,32 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     return xy_loss, wh_loss, obj_loss
     #return xy_loss + wh_loss + obj_loss
 
+def non_max_suppression(boxes, scores, iou_threshold):
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
+    
+    areas = (x2 - x1) * (y2 - y1)
+    order = scores.argsort()
 
-def non_max_suppression():
-    pass
+    keep = []
+    while order.size > 0:
+        i = order[0]
+        keep.append(i)
+        xx1 = tf.maximum(x1[i], x1[order[1:]])
+        yy1 = tf.maximum(y1[i], y1[order[1:]])
+        xx2 = tf.minimum(x2[i], x2[order[1:]])
+        yy2 = tf.minimum(y2[i], y2[order[1:]])
+
+        w = tf.maximum(0.0, xx2 - xx1)
+        h = tf.maximum(0.0, yy2 - yy1)
+        inter = w * h
+        iou = inter / (areas[i] + areas[order[1:] - inter])
+        index = tf.where(iou < iou_threshold)[0]
+        order = order[index + 1]
+    
+    return keep
 
 def PhosaurusNet_test():
     # this is a test to check if network is able to run
