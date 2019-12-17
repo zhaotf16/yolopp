@@ -155,31 +155,9 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     #return xy_loss + wh_loss + obj_loss
 
 def non_max_suppression(boxes, scores, iou_threshold):
-    x1 = boxes[:, 0]
-    y1 = boxes[:, 1]
-    x2 = boxes[:, 2]
-    y2 = boxes[:, 3]
     
-    areas = (x2 - x1) * (y2 - y1)
-    order = scores.argsort()
-
-    keep = []
-    while order.size > 0:
-        i = order[0]
-        keep.append(i)
-        xx1 = tf.maximum(x1[i], x1[order[1:]])
-        yy1 = tf.maximum(y1[i], y1[order[1:]])
-        xx2 = tf.minimum(x2[i], x2[order[1:]])
-        yy2 = tf.minimum(y2[i], y2[order[1:]])
-
-        w = tf.maximum(0.0, xx2 - xx1)
-        h = tf.maximum(0.0, yy2 - yy1)
-        inter = w * h
-        iou = inter / (areas[i] + areas[order[1:] - inter])
-        index = tf.where(iou < iou_threshold)[0]
-        order = order[index + 1]
     
-    return keep
+    return boxes
 
 def PhosaurusNet_test():
     # this is a test to check if network is able to run
