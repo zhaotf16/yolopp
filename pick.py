@@ -42,7 +42,7 @@ def pick(argv):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
         y_pred = net(x, training=False)
-    
+        bbox, score = cn.yolo_head(y_pred)
     #format of output files is STAR
     stars = []
 
