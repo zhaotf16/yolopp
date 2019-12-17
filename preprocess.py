@@ -22,7 +22,7 @@ def downsample(inputs, use_factor=False, para1=None, para2=None):
                 factor=para1,
                 shape=para2
             )
-            #TODO: fix labels for the downsampled micrographs
+            
         else:
             print("Prcocessing %s ..." % (inputs[i].name))
             inputs[i].data = mrcHelper.downsample_with_size(
@@ -30,8 +30,7 @@ def downsample(inputs, use_factor=False, para1=None, para2=None):
                 size1=para1,
                 size2=para2
             )
-            # TODO: fix labels for the downsampled micrographs
-
+    
     return inputs
 
 def star2label(inputs, image_size, grid_size=64, particle_size=220):
