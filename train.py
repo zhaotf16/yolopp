@@ -76,8 +76,8 @@ def train(argv):
             #print("epoch: %d\tloss:%f" %(e, average_loss))
             print("epoch: %d\tbatch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
             (e+1, i+1, xy_loss, wh_loss, obj_loss, loss))
-            #grads = tape.gradient(loss, net.trainable_variables)
-            #optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
+            grads = tape.gradient(loss, net.trainable_variables)
+            optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
     net.save_weights('yolopp_weights/', save_format='tf')
     
 if __name__ == '__main__':
