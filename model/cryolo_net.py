@@ -31,7 +31,7 @@ class PhosaurusNet(Darknet19):
         )
         self.upsample = tf.keras.layers.UpSampling2D(2)
         self.concatenate = tf.keras.layers.Concatenate()
-
+    @tf.function
     def call(self, input, training=False):
         x = self.conv1(input)
         x = self.conv2(x, training=training)
