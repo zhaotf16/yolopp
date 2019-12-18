@@ -9,17 +9,12 @@ import starHelper
 import preprocess
 import model.cryolo_net as cn
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string("input_dir", None, "dir of input micrographs")
-flags.DEFINE_string("output_dir", None, "dir of output predictions")
-
 #Local settings
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
-print(gpus, cpus)
 tf.config.experimental.set_virtual_device_configuration(
     gpus[-1],
-    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
+   [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
 )
 
 def pick(argv):
@@ -33,7 +28,7 @@ def pick(argv):
     net = cn.PhosaurusNet()
 
     #debug:
-    star = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/test_label")
+    star = starHelper.read_all_star("../dataset/STAR/test")
     label = preprocess.star2label(star, 1024, grid_size=64, 
         particle_size=(110/7420*1024, 110/7676*1024),
     )
@@ -46,9 +41,9 @@ def pick(argv):
         x = array[index:index+batchsize, ...]
         y_true = label[index:index+batchsize, ...]
         y_pred = net(x, training=False)
-        #bbox, score = cn.yolo_head(y_pred)
+        bbox, score = cn.yolo_head(y_pred)
         #boxes = cn.non_max_suppression(bbox, score, 0.5)
-        #score = tf.cast(score>0.2, tf.float32)
+        #score = tf.cast(score>0.5, tf.float32)
         #print(tf.reduce_sum(score))
         xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
         xy_loss = tf.reduce_mean(xy_loss)
@@ -61,4 +56,7 @@ def pick(argv):
     stars = []
 
 if __name__ == '__main__':
+    FLAGS = flags.FLAGS
+    flags.DEFINE_string("input_dir", None, "dir of input micrographs")
+    flags.DEFINE_string("output_dir", None, "dir of output predictions")
     app.run(pick)

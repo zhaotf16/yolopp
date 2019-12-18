@@ -8,29 +8,9 @@ import model.cryolo_net as cn
 from absl import app
 from absl import flags
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
-flags.DEFINE_string("label_path", None, "path of labels(star, etc.)")
-
-flags.mark_flag_as_required("data_path")
-flags.mark_flag_as_required("label_path")
-
-#Local settings
-gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
-cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
-print(gpus, cpus)
-tf.config.experimental.set_virtual_device_configuration(
-    gpus[-1],
-    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
-)
-
 def train(argv):
     del argv
-    #data_path = "../dataset/EMPIAR-10025/processed/micrographs"
-    #label_path = "../dataset/EMPIAR-10025/processed/labels"
-    #path = "../stack_0001_DW"
-    #dst = "../dataset/EMPIAR-10025/processed/micrographs"
-    #dst1 = "../dataset/EMPIAR-10025/processed/labels"
+
     data_path = FLAGS.data_path
     label_path = FLAGS.label_path
 
@@ -42,8 +22,8 @@ def train(argv):
         particle_size=(110/7420*1024, 110/7676*1024),
     )
     
-    batchsize = 1
-    epochs = 70
+    batchsize = FLAGS.batch_size
+    epochs = FLAGS.epoch
     learning_rate = 0.001
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -81,4 +61,21 @@ def train(argv):
     net.save_weights('yolopp_weights/', save_format='tf')
     
 if __name__ == '__main__':
+    FLAGS = flags.FLAGS
+    flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
+    flags.DEFINE_string("label_path", None, "path of labels(star, etc.)")
+    flags.DEFINE_integer("batch_size", 1, "batch size of training data")
+    flags.DEFINE_integer("epoch", 70, "total_epochs")
+    flags.DEFINE_bool("use_limit", True, "set gpu memory limit")
+
+    flags.mark_flag_as_required("data_path")
+    flags.mark_flag_as_required("label_path")
+
+    if FLAGS.use_limit:
+        gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
+        cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
+        tf.config.experimental.set_virtual_device_configuration(
+            gpus[-1],
+            [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
+        )
     app.run(train)
