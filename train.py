@@ -11,6 +11,14 @@ from absl import flags
 def train(argv):
     del argv
 
+    if FLAGS.use_limit:
+        gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
+        cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
+        tf.config.experimental.set_virtual_device_configuration(
+            gpus[-1],
+            [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
+        )
+
     data_path = FLAGS.data_path
     label_path = FLAGS.label_path
 
@@ -65,17 +73,10 @@ if __name__ == '__main__':
     flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
     flags.DEFINE_string("label_path", None, "path of labels(star, etc.)")
     flags.DEFINE_integer("batch_size", 1, "batch size of training data")
-    flags.DEFINE_integer("epoch", 70, "total_epochs")
+    flags.DEFINE_integer("epoch", 300, "total_epochs")
     flags.DEFINE_bool("use_limit", True, "set gpu memory limit")
 
     flags.mark_flag_as_required("data_path")
     flags.mark_flag_as_required("label_path")
 
-    if FLAGS.use_limit:
-        gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
-        cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
-        tf.config.experimental.set_virtual_device_configuration(
-            gpus[-1],
-            [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
-        )
     app.run(train)
