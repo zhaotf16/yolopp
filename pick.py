@@ -21,6 +21,8 @@ def pick(argv):
     del argv
 
     data_path = FLAGS.input_dir
+    dst = FLAGS.output_dir
+
     mrc = mrcHelper.load_mrc_file(data_path)
     array = preprocess.mrc2array(mrc, image_size=1024)
 
@@ -28,33 +30,46 @@ def pick(argv):
     net = cn.PhosaurusNet()
 
     #debug:
-    star = starHelper.read_all_star("../dataset/STAR/test")
-    label = preprocess.star2label(star, 1024, grid_size=64, 
-        particle_size=(110/7420*1024, 110/7676*1024),
-    )
-
+    #star = starHelper.read_all_star("../dataset/STAR/test")
+    #label = preprocess.star2label(star, 1024, grid_size=64, 
+    #    particle_size=(110/7420*1024, 110/7676*1024),
+    #)
+    
     net.load_weights('yolopp_weights/')
     batch_num = np.shape(array)[0] // batchsize
 
+    #format of output files is STAR
+    stars = []
     for i in range(batch_num):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
-        y_true = label[index:index+batchsize, ...]
+        #y_true = label[index:index+batchsize, ...]
         y_pred = net(x, training=False)
         bbox, score = cn.yolo_head(y_pred)
         #boxes = cn.non_max_suppression(bbox, score, 0.5)
         #score = tf.cast(score>0.5, tf.float32)
         #print(tf.reduce_sum(score))
-        xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
-        xy_loss = tf.reduce_mean(xy_loss)
-        wh_loss = tf.reduce_mean(wh_loss)
-        obj_loss = tf.reduce_mean(obj_loss)
-        loss = xy_loss + wh_loss + obj_loss
-        print("batch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
-        (i+1, xy_loss, wh_loss, obj_loss, loss))
-    #format of output files is STAR
-    stars = []
+        #xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
+        #xy_loss = tf.reduce_mean(xy_loss)
+        #wh_loss = tf.reduce_mean(wh_loss)
+        #obj_loss = tf.reduce_mean(obj_loss)
+        #loss = xy_loss + wh_loss + obj_loss
+        #print("batch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
+        #(i+1, xy_loss, wh_loss, obj_loss, loss))
 
+        for n in range(batchsize):
+            box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
+            box_xy, box_wh = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
+            confidence = score[n, ...]
+            print(tf.shape(confidence))
+            w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
+            star = starHelper.StarData(str(i*batchsize+n))
+            for a in range(w):
+                for b in range(h):
+                    if confidence[a, b] > 0.3:
+                        star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+            stars.append(star)
+    starHelper.write_star(stars, dst)
 if __name__ == '__main__':
     FLAGS = flags.FLAGS
     flags.DEFINE_string("input_dir", None, "dir of input micrographs")
