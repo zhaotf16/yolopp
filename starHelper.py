@@ -8,7 +8,7 @@ class StarData():
 def read_star(path):
     coordinates = []
     with open(path) as f:
-        x_index = y_index = 0
+        x_index, y_index = 0, 0
         while True:
             line = f.readline()
             if not line:
@@ -18,16 +18,20 @@ def read_star(path):
             #_rlnCoordinateX #N means the Nth item stands for x-coordinate
             if line.startswith('_rlnCoordinateX'):
                 #relion parameters start from 1, not 0
-                x_index = int(line[len(line)-2]) - 1
+                #x_index = int(line[len(line)-2]) - 1
+                content = line.split()[-1].strip('#')
+                x_index = int(content) - 1
                 continue
             if line.startswith('_rlnCoordinateY'):
-                y_index = int(line[len(line)-2]) - 1
+                #y_index = int(line[len(line)-2]) - 1
+                content = line.split()[-1].strip('#')
+                y_index = int(content) - 1
                 continue
             if line.startswith('_rln') or not line.split():
                 continue
             content = line.split()
            
-            coordinates.append((int(content[x_index]), int(content[y_index])))
+            coordinates.append((int(float(content[x_index])), int(float(content[y_index]))))
 
     return coordinates
 
