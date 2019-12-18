@@ -264,7 +264,8 @@ def load_mrc_file(path):
         return
     if not path.endswith('/'):
         path += '/'
-        mrc_data = []
+
+    mrc_data = []
     for file in os.listdir(path):
         if file.endswith('.mrc'):
             print("Loading %s ..." % (file))
