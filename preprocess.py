@@ -3,6 +3,10 @@ import mrcHelper
 import starHelper
 import numpy as np
 
+from absl import app
+from absl import flags
+
+
 class MSData():
     def __init__(self, mrc_data, star_data):
         self.mrc_data = mrc_data
@@ -61,15 +65,16 @@ def mrc2array(inputs, image_size):
         array[i,...] = np.expand_dims(inputs[i].data.astype(np.float32), axis=-1)
     return array
 
-if __name__ == '__main__':
-    #This is a test on eml1/user/ztf
-    path = "../data/EMPIAR-10025/rawdata/micrographs"
-    #path = "../stack_0001_DW"
-    dst = "../dataset/EMPIAR-10025/processed/micrographs"
-    dst1 = "../dataset/EMPIAR-10025/processed/labels"
-    data = mrcHelper.load_mrc_file(path)
-    label = starHelper.read_all_star("../dataset/EMPIAR-10025/rawdata/label_for_training")
-    #downsampled_data = preprocess(data, False, para1=1024, para2=1024)
+def main(argv):
+    del argv
+    data_path = FLAGS.data_path
+    label_path = FLAGS.label_path
+    data_dst = FLAGS.data_dst_path
+    label_dst = FLAGS.label_dst_path
+
+    data = mrcHelper.load_mrc_file(data_path)
+    label = starHelper.read_all_star(label_path)
+    # downsampled_data = preprocess(data, False, para1=1024, para2=1024)
     data = downsample(data, False, para1=1024, para2=1024)
     downsampled_label = []
     for i in range(len(label)):
@@ -79,6 +84,20 @@ if __name__ == '__main__':
             (1024 / 7420, 1024 / 7676)
         )
         downsampled_label.append(starHelper.StarData(name, content))
-    
-    mrcHelper.write_mrc(data, dst=dst)
-    starHelper.write_star(downsampled_label, dst=dst1)
+
+    mrcHelper.write_mrc(data, dst=data_dst)
+    starHelper.write_star(downsampled_label, dst=label_dst)
+
+if __name__ == '__main__':
+    #This is a test on eml1/user/ztf
+    FLAGS = flags.FLAGS
+    flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
+    flags.DEFINE_string("label_path", None, "path of labels(star, etc.)")
+    flags.DEFINE_string("data_dst_path", None, "target to store processed data")
+    flags.DEFINE_string("label_dst_path", None, "target to store processed labels")
+
+    flags.mark_flag_as_required("data_path")
+    flags.mark_flag_as_required("label_path")
+    flags.mark_flag_as_required("data_dst_path")
+    flags.mark_flag_as_required("label_dst_path")
+    app.run(main)
