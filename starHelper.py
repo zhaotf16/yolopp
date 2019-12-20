@@ -73,8 +73,12 @@ def write_star(inputs, dst):
             f.write('loop_\n')
             f.write('_rlnCoordinateX #1\n')
             f.write('_rlnCoordinateX #2\n')
+            f.write('_rlnClassNumber #3\n')
+            f.write('_rlnAnglePsi #4\n')
+            f.write('_rlnAutopickFigureOfMerit  #5\n')
             for item in star_data.content:
-                f.write("%d\t%d\n" % (item[0], item[1]))
+                f.write("%d\t%d\t%d\t%f\t%f\n" % (
+                    float(item[0]), float(item[1]), -999, -999.0, -999.0))
 
 if __name__ == '__main__':
     path = '../dataset/EMPIAR-10025/rawdata/label_for_training/'
