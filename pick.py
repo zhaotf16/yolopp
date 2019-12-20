@@ -59,11 +59,11 @@ def pick(argv):
 
         for n in range(batchsize):
             box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
-            box_xy, box_wh = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
+            box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
             confidence = score[n, ...]
             print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
-            star = starHelper.StarData(str(i*batchsize+n))
+            star = starHelper.StarData(str(i*batchsize+n), [])
             for a in range(w):
                 for b in range(h):
                     if confidence[a, b] > 0.3:

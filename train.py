@@ -13,7 +13,7 @@ def train(argv):
 
     if FLAGS.use_limit:
         gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
-        cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
+        #cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
         tf.config.experimental.set_virtual_device_configuration(
             gpus[-1],
             [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
