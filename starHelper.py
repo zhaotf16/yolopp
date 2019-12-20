@@ -77,7 +77,7 @@ def write_star(inputs, dst):
             f.write('_rlnAnglePsi #4\n')
             f.write('_rlnAutopickFigureOfMerit  #5\n')
             for item in star_data.content:
-                f.write("%d\t%d\t%d\t%f\t%f\n" % (
+                f.write("%.1f\t%.1f\t%d\t%.1f\t%.1f\n" % (
                     float(item[0]), float(item[1]), -999, -999.0, -999.0))
 
 if __name__ == '__main__':
