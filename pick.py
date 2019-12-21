@@ -74,4 +74,5 @@ if __name__ == '__main__':
     FLAGS = flags.FLAGS
     flags.DEFINE_string("input_dir", None, "dir of input micrographs")
     flags.DEFINE_string("output_dir", None, "dir of output predictions")
+    flags.DEFINE_string("weights_dir", "../yolopp_weights", "dir or pretrained weights")
     app.run(pick)

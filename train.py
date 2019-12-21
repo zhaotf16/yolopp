@@ -74,8 +74,9 @@ if __name__ == '__main__':
     flags.DEFINE_string("label_path", None, "path of labels(star, etc.)")
     flags.DEFINE_integer("batch_size", 1, "batch size of training data")
     flags.DEFINE_integer("epoch", 300, "total_epochs")
-    flags.DEFINE_bool("use_limit", True, "set gpu memory limit")
-
+    flags.DEFINE_bool("use_limit", True, "set gpu memory limit") 
+    flags.DEFINE_string("save_weights", "../yolopp_weights", "dir to store weights")
+    
     flags.mark_flag_as_required("data_path")
     flags.mark_flag_as_required("label_path")
 
