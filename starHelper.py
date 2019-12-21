@@ -48,6 +48,7 @@ def read_all_star(path):
             print("Loading %s.star ..." % (name))
             content = read_star(path + file)
             stars.append(StarData(name, content))
+    star.sort(key=lambda s: s.name)
     return stars
 
 def downsample_with_size(coordinates, scale):

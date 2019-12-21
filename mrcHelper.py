@@ -275,6 +275,7 @@ def load_mrc_file(path):
             name, _ = os.path.splitext(file)
             # TODO: load and process label according to STAR or EMAN
             mrc_data.append(MrcData(name=name, header=header, data=data, label=""))
+    mrc_data.sort(key=lambda m: m.name)
     return mrc_data
 
 def downsample_with_size(x, size1, size2):
