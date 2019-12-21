@@ -72,7 +72,7 @@ def write_star(inputs, dst):
             f.write('\ndata_\n')
             f.write('\nloop_\n')
             f.write('_rlnCoordinateX #1\n')
-            f.write('_rlnCoordinateX #2\n')
+            f.write('_rlnCoordinateY #2\n')
             f.write('_rlnClassNumber #3\n')
             f.write('_rlnAnglePsi #4\n')
             f.write('_rlnAutopickFigureOfMerit  #5\n')
