@@ -67,7 +67,10 @@ def pick(argv):
             for a in range(w):
                 for b in range(h):
                     if confidence[a, b] > 0.3:
-                        star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+                        #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+                        star.content.append((
+                           (y_pred[n,a,b,0]+a)/64*7420, (y_pred[n,a,b,1]+b)/64*7676
+                        ))
             stars.append(star)
     starHelper.write_star(stars, dst)
 if __name__ == '__main__':
