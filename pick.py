@@ -34,8 +34,8 @@ def pick(argv):
     #label = preprocess.star2label(star, 1024, grid_size=64, 
     #    particle_size=(110/7420*1024, 110/7676*1024),
     #)
-    
-    net.load_weights(FLAGS.weights_dir)
+    weights_path = FLAGS.weights_dir
+    net.load_weights(weights_path)
     batch_num = np.shape(array)[0] // batchsize
 
     #format of output files is STAR
@@ -74,5 +74,5 @@ if __name__ == '__main__':
     FLAGS = flags.FLAGS
     flags.DEFINE_string("input_dir", None, "dir of input micrographs")
     flags.DEFINE_string("output_dir", None, "dir of output predictions")
-    flags.DEFINE_string("weights_dir", "../yolopp_weights", "dir or pretrained weights")
+    flags.DEFINE_string("weights_dir", "../yolopp_weights/", "dir or pretrained weights")
     app.run(pick)
