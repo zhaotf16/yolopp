@@ -78,6 +78,7 @@ def write_star(inputs, dst):
             f.write('_rlnAutopickFigureOfMerit  #5\n')
             for item in star_data.content:
                 f.write("%d.0\t%d.0\t-999\t-999.0\t-999.0\n"%(item[0], item[1]))
+            f.write('\n')
                  
 
 if __name__ == '__main__':
