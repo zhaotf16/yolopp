@@ -74,6 +74,9 @@ def main(argv):
 
     data = mrcHelper.load_mrc_file(data_path)
     label = starHelper.read_all_star(label_path)
+    #debug:
+    for i in range(len(data)):
+        print(data[i].name, '\t', label[i].name)
     # downsampled_data = preprocess(data, False, para1=1024, para2=1024)
     data = downsample(data, False, para1=1024, para2=1024)
     downsampled_label = []
@@ -84,7 +87,7 @@ def main(argv):
             (1024 / 7420, 1024 / 7676)
         )
         downsampled_label.append(starHelper.StarData(name, content))
-
+    
     mrcHelper.write_mrc(data, dst=data_dst)
     starHelper.write_star(downsampled_label, dst=label_dst)
 
