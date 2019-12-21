@@ -35,7 +35,7 @@ def pick(argv):
     #    particle_size=(110/7420*1024, 110/7676*1024),
     #)
     
-    net.load_weights('yolopp_weights/')
+    net.load_weights(FLAGS.weights_dir)
     batch_num = np.shape(array)[0] // batchsize
 
     #format of output files is STAR
