@@ -20,7 +20,7 @@ def downsample(inputs, use_factor=False, para1=None, para2=None):
     
     for i in range(len(inputs)):
         if use_factor:
-            print("Prcocessing %s ..." % ( inputs[i].name))
+            print("Processing %s ..." % ( inputs[i].name))
             inputs[i].data = mrcHelper.downsample_with_factor(
                 inputs[i].data,
                 factor=para1,
@@ -89,7 +89,18 @@ def main(argv):
         downsampled_label.append(starHelper.StarData(name, content))
     
     mrcHelper.write_mrc(data, dst=data_dst)
-    starHelper.write_star(downsampled_label, dst=label_dst)
+    #starHelper.write_star(downsampled_label, dst=label_dst)
+    
+    #debug:
+    upsampled_label = []
+    for i in range(len(label)):
+        name = label[i].name
+        content = starHelper.downsample_with_size(
+            label[i].content,
+            (7420 / 1024, 7676 / 1024)
+        )
+        upsampled_label.append(starHelper.StarData(name, content=content))
+    starHelper.write_star(upsampled_label, dst=label_dst)
 
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
