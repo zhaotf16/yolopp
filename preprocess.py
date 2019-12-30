@@ -90,18 +90,42 @@ def main(argv):
     
     mrcHelper.write_mrc(data, dst=data_dst)
     #starHelper.write_star(downsampled_label, dst=label_dst)
-    
+    '''
     #debug:
     upsampled_label = []
-    for i in range(len(label)):
+    for i in range(len(downsampled_label)):
         name = label[i].name
         content = starHelper.downsample_with_size(
-            label[i].content,
+            downsampled_label[i].content,
             (7420 / 1024, 7676 / 1024)
         )
         upsampled_label.append(starHelper.StarData(name, content=content))
     starHelper.write_star(upsampled_label, dst=label_dst)
-
+    '''
+    #debug:
+    label = star2label(downsampled_label, 1024, grid_size=64, 
+        particle_size=(110/7420*1024, 110/7676*1024),
+    )
+    import model.cryolo_net as cn
+    import tensorflow as tf
+    bbox, score = cn.yolo_head(label)
+    stars = []
+    for n in range(tf.shape(label)[0]):
+        box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
+        box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
+        confidence = score[n, ...]
+        print(np.shape(confidence))
+        w, h = np.shape(confidence)[0], np.shape(confidence)[1]
+        star = starHelper.StarData(str(n), [])
+        for a in range(w):
+            for b in range(h):
+                if confidence[a, b] > 0.5:
+                    #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+                    star.content.append((
+                        (tf.sigmoid(label[n,a,b,0])+a)/64*7420, (tf.sigmoid(label[n,a,b,1])+b)/64*7676
+                    ))
+    stars.append(star)
+    
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
     FLAGS = flags.FLAGS
