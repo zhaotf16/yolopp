@@ -101,6 +101,7 @@ def main(argv):
         )
         upsampled_label.append(starHelper.StarData(name, content=content))
     starHelper.write_star(upsampled_label, dst=label_dst)
+    
     '''
     #debug:
     label = star2label(downsampled_label, 1024, grid_size=64, 
@@ -125,7 +126,7 @@ def main(argv):
                         (tf.sigmoid(label[n,a,b,0])+a)/64*7420, (tf.sigmoid(label[n,a,b,1])+b)/64*7676
                     ))
     stars.append(star)
-    
+    starHelper.write_star(stars, dst=label_dst)
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
     FLAGS = flags.FLAGS
