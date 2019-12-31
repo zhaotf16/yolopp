@@ -125,7 +125,7 @@ def main(argv):
                     star.content.append((
                         (tf.sigmoid(label[n,a,b,0])+a)/64*7420, (tf.sigmoid(label[n,a,b,1])+b)/64*7676
                     ))
-    stars.append(star)
+        stars.append(star)
     starHelper.write_star(stars, dst=label_dst)
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
