@@ -68,6 +68,45 @@ def train(argv):
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
     net.save_weights('yolopp_weights/', save_format='tf')
+
+    #debug:
+    batch_num = 1
+    stars = []
+    for i in range(batch_num):
+        index = i * batchsize
+        x = array[index:index+batchsize, ...]
+        y_true = label[index:index+batchsize, ...]
+        y_pred = net(x, training=False)
+        bbox, score = cn.yolo_head(y_pred)
+        #boxes = cn.non_max_suppression(bbox, score, 0.5)
+        #score = tf.cast(score>0.5, tf.float32)
+        #print(tf.reduce_sum(score))
+        #xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
+        #xy_loss = tf.reduce_mean(xy_loss)
+        #wh_loss = tf.reduce_mean(wh_loss)
+        #obj_loss = tf.reduce_mean(obj_loss)
+        #loss = xy_loss + wh_loss + obj_loss
+        #print("batch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
+        #(i+1, xy_loss, wh_loss, obj_loss, loss))
+
+        for n in range(batchsize):
+            box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
+            box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
+            confidence = score[n, ...]
+            true_confidence = y_true[n, :, :, 4]
+            print(tf.reduce_sum(tf.square(true_confidence-confidence)))
+            #print(tf.shape(confidence))
+            w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
+            star = starHelper.StarData(str(i*batchsize+n), [])
+            for a in range(w):
+                for b in range(h):
+                    if confidence[a, b] > 0.7:
+                        #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+                        star.content.append((
+                           (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
+                        ))
+            stars.append(star)
+    starHelper.write_star(stars, "../dataset/yolopp")
     
 if __name__ == '__main__':
     FLAGS = flags.FLAGS
