@@ -94,9 +94,8 @@ def train(argv):
             box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
             confidence = score[n, ...]
             true_confidence = y_true[n, :, :, 4]
-            mask = tf.squeeze(true_confidence, axis=-1)
             print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
-            print(tf.reduce_sum(tf.square(true_confidence-confidence)*mask))
+            print(tf.reduce_sum(tf.square(true_confidence-confidence)*true_confidence))
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
             star = starHelper.StarData(str(i*batchsize+n), [])
