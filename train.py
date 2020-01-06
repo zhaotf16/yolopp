@@ -95,6 +95,7 @@ def train(argv):
             confidence = score[n, ...]
             true_confidence = y_true[n, :, :, 4]
             mask = tf.squeeze(true_confidence, axis=-1)
+            print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
             print(tf.reduce_sum(tf.square(true_confidence-confidence)*mask))
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
