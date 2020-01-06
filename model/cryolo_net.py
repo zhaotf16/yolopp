@@ -116,7 +116,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     pred_xy = tf.sigmoid(pred_xy)
     #box_xy and true_xy are ratio the whole meshgrid and input_image
     pred_box, pred_confidence = yolo_head(y_pred)
-    
+    print(y_true.shape)
     true_xy, true_wh, true_confidence = tf.split(y_true, (2, 2, 1), axis=-1)
     true_x1y1 = true_xy - true_wh / 2
     true_x2y2 = true_xy + true_wh / 2
@@ -150,7 +150,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     
     obj_loss = tf.reduce_sum(tf.square(true_confidence - pred_confidence), axis=-1)
     #obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
-    obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss
+    obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss * ignore_mask
     obj_loss = tf.reduce_sum(obj_loss, axis=(1, 2))
 
     #debug:

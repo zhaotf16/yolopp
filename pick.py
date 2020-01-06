@@ -39,10 +39,10 @@ def pick(argv):
     weights_path = FLAGS.weights_dir
     net.load_weights(weights_path)
     batch_num = np.shape(array)[0] // batchsize
-
+    batch_num = 1
     #format of output files is STAR
     stars = []
-    for i in range(1):
+    for i in range(batch_num):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
         #y_true = label[index:index+batchsize, ...]
@@ -69,10 +69,10 @@ def pick(argv):
             for a in range(w):
                 for b in range(h):
                     if confidence[a, b] > 0.7:
-                        star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
-                        #star.content.append((
-                        #   (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
-                        #))
+                        #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+                        star.content.append((
+                           (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
+                        ))
             stars.append(star)
     starHelper.write_star(stars, dst)
 if __name__ == '__main__':
