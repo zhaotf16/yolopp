@@ -92,7 +92,7 @@ def train(argv):
         for n in range(batchsize):
             box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
             box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
-            confidence = score[n, ...]
+            confidence = tf.squeeze(score[n, ...], axis=-1)
             true_confidence = y_true[n, :, :, 4]
             print(true_confidence.shape)
             print(confidence.shape)
@@ -100,7 +100,7 @@ def train(argv):
             print(tf.reduce_min(true_confidence, tf.reduce_min(true_confidence)))
             confidence = tf.sigmoid(confidence)
             print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
-            print(tf.reduce_min(true_confidence, tf.reduce_min(true_confidence)))
+            print(tf.reduce_min(true_confidence), tf.reduce_min(true_confidence))
             print(tf.reduce_sum(tf.square(true_confidence-confidence)*true_confidence))
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
