@@ -150,7 +150,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     
     obj_loss = tf.reduce_sum(tf.square(true_confidence - pred_confidence), axis=-1)
     #obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
-    obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss * ignore_mask
+    obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss
     obj_loss = tf.reduce_sum(obj_loss, axis=(1, 2))
 
     #debug:
