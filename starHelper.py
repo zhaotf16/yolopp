@@ -32,7 +32,7 @@ def read_star(path):
             content = line.split()
            
             coordinates.append((int(float(content[x_index])), int(float(content[y_index]))))
-
+            coordinates.sort(key=lambda x: x[0])
     return coordinates
 
 def read_all_star(path):

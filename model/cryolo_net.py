@@ -104,7 +104,7 @@ def broadcast_iou(box_1, box_2):
                  (box_2[..., 3] - box_2[..., 1])
     return intersection / (box_1_area + box_2_area - intersection)
 
-def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
+def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     #y_pred: yolo_output [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true: true_boxes [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true is relative to the whole image, and so is anchor
