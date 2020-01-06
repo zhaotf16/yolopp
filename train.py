@@ -37,8 +37,8 @@ def train(argv):
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
     #debug:
-    #array = np.expand_dims(array[0, ...], axis=0)
-    #batchsize = 1
+    array = np.expand_dims(array[0, ...], axis=0)
+    batchsize = 1
     #net.load_weights('yolopp_weights/')
     for e in range(epochs):
         batch_num = np.shape(array)[0] // batchsize

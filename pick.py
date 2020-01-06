@@ -30,6 +30,8 @@ def pick(argv):
     net = cn.PhosaurusNet()
 
     #debug:
+    import numpy as np
+    array = np.expand_dims(array[0, ...], axis=0)
     #star = starHelper.read_all_star("../dataset/STAR/test")
     #label = preprocess.star2label(star, 1024, grid_size=64, 
     #    particle_size=(110/7420*1024, 110/7676*1024),
@@ -40,7 +42,7 @@ def pick(argv):
 
     #format of output files is STAR
     stars = []
-    for i in range(batch_num):
+    for i in range(1):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
         #y_true = label[index:index+batchsize, ...]
@@ -66,10 +68,10 @@ def pick(argv):
             star = starHelper.StarData(str(i*batchsize+n), [])
             for a in range(w):
                 for b in range(h):
-                    if confidence[a, b] > 0.5:
+                    if confidence[a, b] > 0.7:
                         #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
                         star.content.append((
-                           (tf.sigmoid(y_pred[n,a,b,0])+a)/64*7420, (tf.sigmoid(y_pred[n,a,b,1])+b)/64*7676
+                           (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
                         ))
             stars.append(star)
     starHelper.write_star(stars, dst)
