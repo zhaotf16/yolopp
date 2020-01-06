@@ -155,9 +155,10 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.6):
     #return xy_loss + wh_loss + obj_loss
 
 def non_max_suppression(boxes, scores, iou_threshold):
-    
-    
-    return boxes
+    '''
+    Now the network cannot work    
+    '''
+    pass
 
 def PhosaurusNet_test():
     # this is a test to check if network is able to run
