@@ -38,7 +38,7 @@ def train(argv):
 
     #debug:
     array = np.expand_dims(array[0, ...], axis=0)
-    label = np.expand_dims(array[0, ...], axis=0)
+    label = np.expand_dims(label[0, ...], axis=0)
     batchsize = 1
     #net.load_weights('yolopp_weights/')
     for e in range(epochs):
