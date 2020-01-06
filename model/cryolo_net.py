@@ -130,6 +130,9 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     meshgrid = tf.concat((grid, coord), axis=-1)
     meshgrid = tf.expand_dims(meshgrid, axis=0)
     
+    #debug:
+    true_xy = true_xy * grid_size - tf.cast(meshgrid, tf.float32)
+
     true_wh = tf.math.log(true_wh / anchor)
     true_wh = tf.where(tf.math.is_inf(true_wh), tf.zeros_like(true_wh), true_wh)
     

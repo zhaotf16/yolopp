@@ -103,7 +103,7 @@ def main(argv):
         upsampled_label.append(starHelper.StarData(name, content=content))
     starHelper.write_star(upsampled_label, dst=label_dst)
     
-    '''
+    
     #debug:
     label = star2label(downsampled_label, 1024, grid_size=64, 
         particle_size=(110/7420*1024, 110/7676*1024),
@@ -129,7 +129,7 @@ def main(argv):
         star.content.sort(key=lambda x:x[0])
         stars.append(star)
     starHelper.write_star(stars, dst=label_dst)
-    
+    '''
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
     FLAGS = flags.FLAGS
