@@ -97,7 +97,7 @@ def train(argv):
             print(true_confidence.shape)
             print(confidence.shape)
             print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
-            print(tf.reduce_min(true_confidence, tf.reduce_min(true_confidence)))
+            print(tf.reduce_min(true_confidence), tf.reduce_min(true_confidence))
             confidence = tf.sigmoid(confidence)
             print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
             print(tf.reduce_min(true_confidence), tf.reduce_min(true_confidence))
@@ -109,8 +109,11 @@ def train(argv):
                 for b in range(h):
                     if confidence[a, b] > 0.7:
                         #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
+                        #star.content.append((
+                        #   (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
+                        #))
                         star.content.append((
-                           (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
+                            a*7420.0/64.0, b*7676.0/64.0
                         ))
             stars.append(star)
     starHelper.write_star(stars, "../dataset/yolopp")
