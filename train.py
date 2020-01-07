@@ -78,7 +78,6 @@ def train(argv):
     for i in range(batch_num):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
-        y_true = label[index:index+batchsize, ...]
         y_pred = net(x, training=False)
         bbox, score = cn.yolo_head(y_pred)
         #boxes = cn.non_max_suppression(bbox, score, 0.5)
@@ -96,7 +95,6 @@ def train(argv):
             box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
             box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
             confidence = tf.squeeze(score[n, ...], axis=-1)
-            true_confidence = y_true[n, :, :, 4]
             confidence = tf.sigmoid(confidence)
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
