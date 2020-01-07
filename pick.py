@@ -39,39 +39,26 @@ def pick(argv):
     weights_path = FLAGS.weights_dir
     net.load_weights(weights_path)
     batch_num = np.shape(array)[0] // batchsize
-    batch_num = 1
     #format of output files is STAR
+    stars = []
     stars = []
     for i in range(batch_num):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
-        #y_true = label[index:index+batchsize, ...]
         y_pred = net(x, training=False)
-        bbox, score = cn.yolo_head(y_pred)
-        #boxes = cn.non_max_suppression(bbox, score, 0.5)
-        #score = tf.cast(score>0.5, tf.float32)
-        #print(tf.reduce_sum(score))
-        #xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
-        #xy_loss = tf.reduce_mean(xy_loss)
-        #wh_loss = tf.reduce_mean(wh_loss)
-        #obj_loss = tf.reduce_mean(obj_loss)
-        #loss = xy_loss + wh_loss + obj_loss
-        #print("batch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
-        #(i+1, xy_loss, wh_loss, obj_loss, loss))
-
+        _, score = cn.yolo_head(y_pred)
         for n in range(batchsize):
-            box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
-            box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
-            confidence = score[n, ...]
-            print(tf.shape(confidence))
+            confidence = tf.squeeze(score[n, ...], axis=-1)
+            confidence = tf.sigmoid(confidence)
+            #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
             star = starHelper.StarData(str(i*batchsize+n), [])
             for a in range(w):
                 for b in range(h):
+                    #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
                     if confidence[a, b] > 0.7:
-                        #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
                         star.content.append((
-                           (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
+                            (a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
                         ))
             stars.append(star)
     starHelper.write_star(stars, dst)

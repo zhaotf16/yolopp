@@ -37,9 +37,9 @@ def train(argv):
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
     #debug:
-    array = np.expand_dims(array[0, ...], axis=0)
-    label = np.expand_dims(label[0, ...], axis=0)
-    batchsize = 1
+    #array = np.expand_dims(array[0, ...], axis=0)
+    #label = np.expand_dims(label[0, ...], axis=0)
+    #batchsize = 1
     #net.load_weights('yolopp_weights/')
     for e in range(epochs):
         batch_num = np.shape(array)[0] // batchsize
@@ -70,7 +70,7 @@ def train(argv):
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:
-    batch_num = 1
+    batch_num = np.shape(array)[0] // batchsize
     stars = []
     for i in range(batch_num):
         index = i * batchsize
@@ -104,10 +104,6 @@ def train(argv):
                 for b in range(h):
                     #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
                     if confidence[a, b] > 0.7:
-                        #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
-                        #star.content.append((
-                        #   (tf.sigmoid(y_pred[n,a,b,0])+a)*7420.0/64, (tf.sigmoid(y_pred[n,a,b,1])+b)*7676.0/64
-                        #))
                         star.content.append((
                             (a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
                         ))
