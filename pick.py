@@ -52,7 +52,7 @@ def pick(argv):
             confidence = tf.sigmoid(confidence)
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
-            star = starHelper.StarData(str(i*batchsize+n), [])
+            star = starHelper.StarData(mrc[index+n].name, [])
             for a in range(w):
                 for b in range(h):
                     #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))

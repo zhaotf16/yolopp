@@ -70,6 +70,9 @@ def train(argv):
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:
+    batchsize = 2
+    mrc = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
+    array = preprocess.mrc2array(mrc, image_size=1024)
     batch_num = np.shape(array)[0] // batchsize
     stars = []
     for i in range(batch_num):
@@ -94,9 +97,7 @@ def train(argv):
             box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
             confidence = tf.squeeze(score[n, ...], axis=-1)
             true_confidence = y_true[n, :, :, 4]
-            print(tf.reduce_min(true_confidence), tf.reduce_min(true_confidence))
             confidence = tf.sigmoid(confidence)
-            print(tf.reduce_sum(tf.square(true_confidence-confidence)*true_confidence))
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
             star = starHelper.StarData(str(i*batchsize+n), [])
