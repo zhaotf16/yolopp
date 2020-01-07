@@ -94,19 +94,15 @@ def train(argv):
             box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
             confidence = tf.squeeze(score[n, ...], axis=-1)
             true_confidence = y_true[n, :, :, 4]
-            print(true_confidence.shape)
-            print(confidence.shape)
-            print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
             print(tf.reduce_min(true_confidence), tf.reduce_min(true_confidence))
             confidence = tf.sigmoid(confidence)
-            print(tf.reduce_max(true_confidence), tf.reduce_max(true_confidence))
-            print(tf.reduce_min(true_confidence), tf.reduce_min(true_confidence))
             print(tf.reduce_sum(tf.square(true_confidence-confidence)*true_confidence))
             #print(tf.shape(confidence))
             w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
             star = starHelper.StarData(str(i*batchsize+n), [])
             for a in range(w):
                 for b in range(h):
+                    print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
                     if confidence[a, b] > 0.7:
                         #star.content.append((box_xy[a,b,0]*7420, box_xy[a,b,1]*7676))
                         #star.content.append((
