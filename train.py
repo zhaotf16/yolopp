@@ -68,6 +68,7 @@ def train(argv):
                 obj_loss = tf.reduce_mean(obj_loss)
                 loss = xy_loss + obj_loss
                 total_loss += loss
+            total_loss /= batch_num
             print("epoch: %d\tbatch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" % 
             (e+1, i+1, xy_loss, obj_loss, loss))
             grads = tape.gradient(loss, net.trainable_variables)
