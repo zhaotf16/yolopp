@@ -66,10 +66,10 @@ def train(argv):
                 xy_loss = tf.reduce_mean(xy_loss)
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
-                loss = xy_loss + wh_loss + obj_loss
+                loss = xy_loss + obj_loss
                 total_loss += loss
-            print("epoch: %d\tbatch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
-            (e+1, i+1, xy_loss, wh_loss, obj_loss, loss))
+            print("epoch: %d\tbatch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" % 
+            (e+1, i+1, xy_loss, obj_loss, loss))
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
         if e % valid_frequency == 0:
@@ -86,9 +86,9 @@ def train(argv):
             valid_xy_loss /= valid_num
             valid_wh_loss /= valid_num
             valid_obj_loss /= valid_num
-            valid_loss = valid_xy_loss + valid_wh_loss + valid_obj_loss
-            print("Validation: epoch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" %
-            (e+1, valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_loss))
+            valid_loss = valid_xy_loss + valid_obj_loss
+            print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" %
+            (e+1, valid_xy_loss, valid_obj_loss, valid_loss))
 
     net.save_weights('yolopp_weights/', save_format='tf')
 
