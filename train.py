@@ -41,6 +41,14 @@ def train(argv):
     #label = np.expand_dims(label[0, ...], axis=0)
     #batchsize = 1
     #net.load_weights('yolopp_weights/')
+    valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/test")
+    valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/test_labels")
+    valid = preprocess.mrc2array(valid, image_size=1024)
+    valid_labels = preprocess.star2label(valid_labels, 1024, 64,
+        (110/7420*1024, 110/7676*1024)
+    )
+    
+    valid_frequency = 3
     for e in range(epochs):
         batch_num = np.shape(array)[0] // batchsize
         total_loss = 0
@@ -60,13 +68,28 @@ def train(argv):
                 obj_loss = tf.reduce_mean(obj_loss)
                 loss = xy_loss + wh_loss + obj_loss
                 total_loss += loss
-            #print("epoch: %d\tbatch: %d\tloss: %f" % (e+1, i+1, loss))
-            #average_loss = total_loss / batch_num
-            #print("epoch: %d\tloss:%f" %(e, average_loss))
             print("epoch: %d\tbatch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
             (e+1, i+1, xy_loss, wh_loss, obj_loss, loss))
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
+        if e % valid_frequency == 0:
+            valid_num = np.shape(valid)[0]
+            valid_xy_loss, valid_wh_loss, valid_obj_loss = 0.0, 0.0, 0.0
+            for i in range(valid_num):
+                valid_data = np.expand_dims(valid[i, ...], axis=0)
+                valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
+                valid_pred = net(valid_data, training=False)
+                xy_loss, wh_loss, obj_loss = cn.yolo_loss(valid_pred, valid_true)
+                valid_xy_loss += xy_loss
+                valid_wh_loss += wh_loss
+                valid_obj_loss += obj_loss
+            valid_xy_loss /= valid_num
+            valid_wh_loss /= valid_num
+            valid_obj_loss /= valid_num
+            valid_loss = valid_xy_loss + valid_wh_loss + valid_obj_loss
+            print("Validation: epoch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" %
+            (e+1, valid_xy_loss, valid_wh_loss, valid_obj_loss))
+
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:
@@ -80,17 +103,6 @@ def train(argv):
         x = array[index:index+batchsize, ...]
         y_pred = net(x, training=False)
         bbox, score = cn.yolo_head(y_pred)
-        #boxes = cn.non_max_suppression(bbox, score, 0.5)
-        #score = tf.cast(score>0.5, tf.float32)
-        #print(tf.reduce_sum(score))
-        #xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
-        #xy_loss = tf.reduce_mean(xy_loss)
-        #wh_loss = tf.reduce_mean(wh_loss)
-        #obj_loss = tf.reduce_mean(obj_loss)
-        #loss = xy_loss + wh_loss + obj_loss
-        #print("batch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" % 
-        #(i+1, xy_loss, wh_loss, obj_loss, loss))
-
         for n in range(batchsize):
             box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
             box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
