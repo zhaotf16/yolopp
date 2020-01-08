@@ -88,7 +88,7 @@ def train(argv):
             valid_obj_loss /= valid_num
             valid_loss = valid_xy_loss + valid_wh_loss + valid_obj_loss
             print("Validation: epoch: %d\txy_loss: %f\twh_loss: %f\tobj_loss: %f\tloss: %f" %
-            (e+1, valid_xy_loss, valid_wh_loss, valid_obj_loss))
+            (e+1, valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_loss))
 
     net.save_weights('yolopp_weights/', save_format='tf')
 
