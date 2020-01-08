@@ -57,22 +57,18 @@ def train(argv):
             x = array[index:index+batchsize, ...]
             y_true = label[index:index+batchsize, ...]
             with tf.GradientTape() as tape:
-                #y_pred = net.call(x, training=True)
                 y_pred = net(x, training=True)
-                #loss = cn.yolo_loss(y_pred, y_true)
-                #loss = tf.reduce_mean(loss)
-                #debug:
                 xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 loss = xy_loss + obj_loss
                 total_loss += loss
-            total_loss /= batch_num
-            print("epoch: %d\tbatch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" % 
-            (e+1, i+1, xy_loss, obj_loss, loss))
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
+        total_loss /= batch_num
+        print("epoch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" % 
+            (e+1, xy_loss, obj_loss, loss))
         if e % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             valid_xy_loss, valid_wh_loss, valid_obj_loss = 0.0, 0.0, 0.0
