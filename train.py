@@ -60,7 +60,7 @@ def train(argv):
                 #debug: regularization
                 loss_regularization = []
                 for p in net.trainable_variables:
-                    loss_regularization.append(tf.keras.losses.l2_loss(p))
+                    loss_regularization.append(tf.nn.l2_loss(p))
                 loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
 
                 y_pred = net(x, training=True)
