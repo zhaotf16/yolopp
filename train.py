@@ -57,12 +57,18 @@ def train(argv):
             x = array[index:index+batchsize, ...]
             y_true = label[index:index+batchsize, ...]
             with tf.GradientTape() as tape:
+                #debug: regularization
+                loss_regularization = []
+                for p in net.trainable_variables:
+                    loss_regularization.append(tf.keras.losses.l2_loss(p))
+                loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
+
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
-                loss = xy_loss + obj_loss
+                loss = xy_loss + obj_loss + 0.0001 * loss_regularization
                 total_loss += loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
