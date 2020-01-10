@@ -41,8 +41,8 @@ def train(argv):
     #label = np.expand_dims(label[0, ...], axis=0)
     #batchsize = 1
     #net.load_weights('yolopp_weights/')
-    valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/test")
-    valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/test_labels")
+    valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
+    valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
     valid = preprocess.mrc2array(valid, image_size=1024)
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
         (110/7420*1024, 110/7676*1024)
