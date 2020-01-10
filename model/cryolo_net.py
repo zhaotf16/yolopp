@@ -31,7 +31,7 @@ class PhosaurusNet(Darknet19):
         )
         self.upsample = tf.keras.layers.UpSampling2D(2)
         self.concatenate = tf.keras.layers.Concatenate()
-        self.dropout = tf.keras.layers.Dropout(rate=0.2)
+        self.dropout = tf.keras.layers.Dropout(rate=0.5)
 
     @tf.function
     def call(self, input, training=False):
