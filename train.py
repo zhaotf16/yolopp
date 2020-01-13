@@ -66,20 +66,22 @@ def train(argv):
                 loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
 
                 y_pred = net(x, training=True)
-                xy_loss, wh_loss, obj_loss = cn.yolo_loss(y_pred, y_true)
+                xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
-                loss = xy_loss + obj_loss + 0.0001 * loss_regularization
+                no_obj_loss = tf.reduce_sum(no_obj_loss)
+
+                loss = xy_loss + obj_loss + no_obj_loss + 0.0001 * loss_regularization
                 total_loss += loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
         total_loss /= batch_num
-        print("epoch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" % 
-            (e+1, xy_loss, obj_loss, loss))
+        print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" % 
+            (e+1, xy_loss, obj_loss, no_obj_loss, loss))
         if e % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
-            valid_xy_loss, valid_wh_loss, valid_obj_loss = 0.0, 0.0, 0.0
+            valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0
             for i in range(valid_num):
                 valid_data = np.expand_dims(valid[i, ...], axis=0)
                 valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
@@ -91,9 +93,10 @@ def train(argv):
             valid_xy_loss /= valid_num
             valid_wh_loss /= valid_num
             valid_obj_loss /= valid_num
-            valid_loss = valid_xy_loss + valid_obj_loss
-            print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tloss: %f" %
-            (e+1, valid_xy_loss, valid_obj_loss, valid_loss))
+            valid_no_obj_loss /= valid_num
+            valid_loss = valid_xy_loss + valid_obj_loss + valid_no_obj_loss
+            print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
+            (e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
 
     net.save_weights('yolopp_weights/', save_format='tf')
 
