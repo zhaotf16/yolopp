@@ -81,12 +81,12 @@ def train(argv):
             (e+1, xy_loss, obj_loss, no_obj_loss, loss))
         if e % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
-            valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0
+            valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0, 0.0
             for i in range(valid_num):
                 valid_data = np.expand_dims(valid[i, ...], axis=0)
                 valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
                 valid_pred = net(valid_data, training=False)
-                xy_loss, wh_loss, obj_loss = cn.yolo_loss(valid_pred, valid_true)
+                xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(valid_pred, valid_true)
                 valid_xy_loss += xy_loss
                 valid_wh_loss += wh_loss
                 valid_obj_loss += obj_loss
