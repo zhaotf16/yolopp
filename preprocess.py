@@ -65,6 +65,11 @@ def mrc2array(inputs, image_size):
         array[i,...] = np.expand_dims(inputs[i].data.astype(np.float32), axis=-1)
     return array
 
+def normalize(mrc_list):
+    for i in range(len(mrc_list)):
+        mrc_list[i].data -= np.mean(mrc_list[i])
+    return mrc_list
+
 def main(argv):
     del argv
     data_path = FLAGS.data_path
@@ -87,7 +92,7 @@ def main(argv):
             (1024 / 7420, 1024 / 7676)
         )
         downsampled_label.append(starHelper.StarData(name, content))
-    
+    data = normalize(data)
     mrcHelper.write_mrc(data, dst=data_dst)
     #starHelper.write_star(label, dst=label_dst)
     starHelper.write_star(downsampled_label, dst=label_dst)
