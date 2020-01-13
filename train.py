@@ -50,6 +50,8 @@ def train(argv):
     
     valid_frequency = 3
     for e in range(epochs):
+        if e > 100:
+            optimizer.learning_rate = 0.0002
         batch_num = np.shape(array)[0] // batchsize
         total_loss = 0
         for i in range(batch_num):
