@@ -90,6 +90,7 @@ def train(argv):
                 valid_xy_loss += xy_loss
                 valid_wh_loss += wh_loss
                 valid_obj_loss += obj_loss
+                valid_no_obj_loss += no_obj_loss
             valid_xy_loss /= valid_num
             valid_wh_loss /= valid_num
             valid_obj_loss /= valid_num
