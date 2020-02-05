@@ -36,8 +36,8 @@ def train(argv):
     average_blur_data = util.averageBlur(array, (3, 8))
     average_blur_label = np.copy(label)
 
-    array = np.concatenate((array, average_blur_data), axis=-1)
-    label = np.concatenate((label, average_blur_label), axis=-1)
+    array = np.concatenate((array, average_blur_data))
+    label = np.concatenate((label, average_blur_label))
 
     print(array.shape, label.shape)
     batchsize = FLAGS.batch_size

@@ -44,5 +44,5 @@ if __name__ == '__main__':
     data = np.random.rand(2,1024,1024,1)
     blur = averageBlur(data, (3,8))
     print(blur.shape)
-    result = np.concatenate((data, blur), axis=-1)
+    result = np.concatenate((data, blur))
     print(result.shape)
