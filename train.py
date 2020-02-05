@@ -32,7 +32,7 @@ def train(argv):
     )
     
     #TODO: offline data augmentation
-    average_blur = util.averageBlur(array, [3, 8])
+    average_blur = util.averageBlur(array, (3, 8))
 
     array = np.concatenate(array, average_blur)
 
