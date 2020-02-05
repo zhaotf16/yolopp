@@ -32,9 +32,11 @@ def train(argv):
     )
     
     #TODO: offline data augmentation
-    average_blur = util.averageBlur(array, (3, 8))
+    average_blur_data = util.averageBlur(array, (3, 8))
+    average_blur_label = np.copy(label)
 
-    array = np.concatenate(array, average_blur)
+    array = np.concatenate(array, average_blur_data)
+    label = np.concatenate(label, average_blur_label)
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch

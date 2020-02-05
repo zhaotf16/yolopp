@@ -15,6 +15,7 @@ def averageBlur(data, boxSize):
     
 
 def gaussianBlur(data, sigma):
+    dst = np.zeros_like(data)
     pass
 
 def dropout(data, dropout_rate):
