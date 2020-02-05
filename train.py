@@ -39,6 +39,7 @@ def train(argv):
     array = np.concatenate((array, average_blur_data), axis=-1)
     label = np.concatenate((label, average_blur_label), axis=-1)
 
+    print(array.shape, label.shape)
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
     learning_rate = 0.001
@@ -69,10 +70,10 @@ def train(argv):
             y_true = label[index:index+batchsize, ...]
             with tf.GradientTape() as tape:
                 #debug: regularization
-                loss_regularization = []
-                for p in net.trainable_variables:
-                    loss_regularization.append(tf.nn.l2_loss(p))
-                loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
+                #loss_regularization = []
+                #for p in net.trainable_variables:
+                #    loss_regularization.append(tf.nn.l2_loss(p))
+                #loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
 
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
@@ -81,7 +82,7 @@ def train(argv):
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_sum(no_obj_loss)
 
-                loss = xy_loss + obj_loss + no_obj_loss + 0.0001 * loss_regularization
+                loss = xy_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
                 total_loss += loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
