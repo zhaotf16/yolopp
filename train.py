@@ -32,11 +32,12 @@ def train(argv):
     )
     
     #TODO: offline data augmentation
+    print('data augmentation: average blurring...')
     average_blur_data = util.averageBlur(array, (3, 8))
     average_blur_label = np.copy(label)
 
-    array = np.concatenate(array, average_blur_data)
-    label = np.concatenate(label, average_blur_label)
+    array = np.concatenate((array, average_blur_data), axis=-1)
+    label = np.concatenate((label, average_blur_label), axis=-1)
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
