@@ -1,3 +1,4 @@
+import util
 import mrcHelper
 import starHelper
 import preprocess
@@ -30,6 +31,11 @@ def train(argv):
         particle_size=(110/7420*1024, 110/7676*1024),
     )
     
+    #TODO: offline data augmentation
+    average_blur = util.averageBlur(array, [3, 8])
+
+    array = np.concatenate(array, average_blur)
+
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
     learning_rate = 0.001
@@ -114,7 +120,7 @@ def train(argv):
         bbox, score = cn.yolo_head(y_pred)
         for n in range(batchsize):
             box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
-            box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
+            #box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
             confidence = tf.squeeze(score[n, ...], axis=-1)
             confidence = tf.sigmoid(confidence)
             #print(tf.shape(confidence))
