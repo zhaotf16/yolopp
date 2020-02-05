@@ -8,7 +8,7 @@ def averageBlur(data, boxSize):
         dst[i, ...] = cv2.boxFilter(
             data[i, ...],
             ddepth=-1,
-            ksize=size,
+            ksize=(size,size),
             normalize=False
         )
     return dst
