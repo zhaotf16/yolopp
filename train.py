@@ -28,16 +28,21 @@ def train(argv):
     
     array = preprocess.mrc2array(mrc, image_size=1024)
     label = preprocess.star2label(star, 1024, grid_size=64, 
-        particle_size=(110/7420*1024, 110/7676*1024),
+        particle_size=(220/7420*1024, 220/7676*1024),
     )
     
     #TODO: offline data augmentation
     print('data augmentation: average blurring...')
     average_blur_data = util.averageBlur(array, (3, 8))
     average_blur_label = np.copy(label)
-
     array = np.concatenate((array, average_blur_data))
     label = np.concatenate((label, average_blur_label))
+    print('data augmentation: gaussian blurring...')
+    gaussian_blur_data = util.gaussianBlur(array, (0, 3))
+    gaussian_blur_label = np.copy(label)
+    array = np.concatenate((array, gaussian_blur_data))
+    label = np. concatenate((label, gaussian_blur_label))
+
 
     print(array.shape, label.shape)
     batchsize = FLAGS.batch_size
@@ -55,13 +60,18 @@ def train(argv):
     valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
     valid = preprocess.mrc2array(valid, image_size=1024)
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
-        (110/7420*1024, 110/7676*1024)
+        (220/7420*1024, 220/7676*1024)
     )
     
     valid_frequency = 3
     for e in range(epochs):
         if e > 100:
+            optimizer.learning_rate = 0.0005
+        elif e > 200:
             optimizer.learning_rate = 0.0002
+        elif e > 300:
+            optimizer.learning_rate = 0.0001
+
         batch_num = np.shape(array)[0] // batchsize
         total_loss = 0
         for i in range(batch_num):
