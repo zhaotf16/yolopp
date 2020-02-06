@@ -68,15 +68,17 @@ def train(argv):
     )
     
     valid_frequency = 3
+    min_loss = 1000000
+    min_loss_epoch = -1
+    min_xy_loss = 100000
+    min_obj_loss = 100000
+    min_no_obj_loss = 100000
     for e in range(epochs):
         if e > 200:
             optimizer.learning_rate = 0.0005
         elif e > 400:
             optimizer.learning_rate = 0.0002
-        
-
         batch_num = np.shape(array)[0] // batchsize
-        total_loss = 0
         for i in range(batch_num):
             index = i * batchsize
             x = array[index:index+batchsize, ...]
@@ -96,7 +98,12 @@ def train(argv):
                 no_obj_loss = tf.reduce_sum(no_obj_loss)
 
                 loss = xy_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
-                total_loss += loss
+                #record epoch where loss reaches minimum
+                if loss < min_loss:
+                    min_loss, min_xy_loss, min_obj_loss, min_no_obj_loss = ...
+                    loss, xy_loss, obj_loss, no_obj_loss
+                    min_loss_epoch = e
+
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
         total_loss /= batch_num
@@ -121,7 +128,10 @@ def train(argv):
             valid_loss = valid_xy_loss + valid_obj_loss + valid_no_obj_loss
             print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
             (e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
-
+            
+    print('\n\nmin_loss: %f\nxy_loss:%f\nobj_loss:%f\nno_obj_loss:%f' % (
+        min_loss, min_xy_loss, min_obj_loss, min_obj_loss))
+    print('In epoch: ', min_loss_epoch)
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:
