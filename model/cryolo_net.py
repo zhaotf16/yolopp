@@ -9,7 +9,7 @@ tf.config.experimental.set_virtual_device_configuration(
     gpus[-1],
     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
 )
-anchor = tf.constant([[80., 80.]], dtype=tf.float32) / 1024
+#anchor = tf.constant([[80., 80.]], dtype=tf.float32) / 1024
 
 class PhosaurusNet(Darknet19):
     def __init__(self):
@@ -31,7 +31,7 @@ class PhosaurusNet(Darknet19):
         )
         self.upsample = tf.keras.layers.UpSampling2D(2)
         self.concatenate = tf.keras.layers.Concatenate()
-        self.dropout = tf.keras.layers.Dropout(rate=0.5)
+        self.dropout = tf.keras.layers.Dropout(rate=0.2)
 
     @tf.function
     def call(self, input, training=False):
@@ -39,7 +39,8 @@ class PhosaurusNet(Darknet19):
         x = self.conv2(x, training=training)
         x = self.conv3(x, training=training)
         x = self.conv4(x, training=training)
-        x = y = self.conv5(x, training=training)
+        x = self.conv5(x, training=training)
+        y = x
         x = self.conv6(x, training=training)
         x = self.additional_conv1(x, training=training)
         x = self.additional_conv2(x, training=training)
@@ -74,7 +75,7 @@ def yolo_head(features):
 
     box_xy = (box_xy + tf.cast(meshgrid, tf.float32)) / tf.cast(grid_size, tf.float32)
     #here anchor is a relative box to the whole page: eg. 160/1024. no need to divide a gridsize
-    box_wh = box_wh * anchor
+    #box_wh = box_wh * anchor
 
     box_x1y1 = box_xy - box_wh / 2
     box_x2y2 = box_xy + box_wh / 2
@@ -133,7 +134,8 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     #debug:
     true_xy = true_xy * tf.cast(grid_size, tf.float32) - tf.cast(meshgrid, tf.float32)
 
-    true_wh = tf.math.log(true_wh / anchor)
+    #true_wh = tf.math.log(true_wh / anchor)
+    true_wh = tf.math.log(true_wh)
     true_wh = tf.where(tf.math.is_inf(true_wh), tf.zeros_like(true_wh), true_wh)
     
     mask = tf.squeeze(true_confidence, axis=-1)
