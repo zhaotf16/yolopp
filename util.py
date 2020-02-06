@@ -78,12 +78,20 @@ def dropout(data, dropout_rate):
                     dst[k, i, j] = mean
     return dst
 
+def contrastNormalization(data):
+    dst = np.copy(data)
+    for i in range(dst.shape[0]):
+        dst[i] -= np.mean(dst[i])
+    return dst
 
 def flip(data, label):
     pass
 
 if __name__ == '__main__':
-    #data = np.random.rand(2,1024,1024,1)
+    data = np.random.rand(2,3,3,1)
+    print(data)
+    dst = contrastNormalization(data)
+    print(dst)
     #blur = averageBlur(data, (3,8))
     #blur = gaussianBlur(data, (0,3))
     #blur = dropout(data, dropout_rate=0.1)

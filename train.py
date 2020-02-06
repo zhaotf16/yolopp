@@ -35,18 +35,29 @@ def train(argv):
     print('data augmentation: average blurring...')
     average_blur_data = util.averageBlur(array, (3, 8))
     average_blur_label = np.copy(label)
-    array = np.concatenate((array, average_blur_data))
-    label = np.concatenate((label, average_blur_label))
+    #array = np.concatenate((array, average_blur_data))
+    #label = np.concatenate((label, average_blur_label))
     print('data augmentation: gaussian blurring...')
     gaussian_blur_data = util.gaussianBlur(array, (0, 3))
     gaussian_blur_label = np.copy(label)
-    array = np.concatenate((array, gaussian_blur_data))
-    label = np. concatenate((label, gaussian_blur_label))
+    #array = np.concatenate((array, gaussian_blur_data))
+    #label = np. concatenate((label, gaussian_blur_label))
     print('data augmentation: dropout...')
     dropout_data = util.dropout(array, 0.1)
     dropout_label = np.copy(label)
-    array = np.concatenate((array, dropout_data))
-    label = np.concatenate((label, dropout_label))
+    #array = np.concatenate((array, dropout_data))
+    #label = np.concatenate((label, dropout_label))
+    print('data augmentation: contrast normalization...')
+    cn_data = util.contrastNormalization(array)
+    cn_label = np.copy(label)
+    #array = np.concatenate((array, cn_data))
+    #label = np.concatenate((label, cn_label))
+    array = np.concatenate((
+        array, average_blur_data, gaussian_blur_data, dropout_data, cn_data
+    ))
+    label = np.concatenate((
+        label, average_blur_label, gaussian_blur_label, dropout_label, cn_label
+    ))
 
     print(array.shape, label.shape)
     batchsize = FLAGS.batch_size
@@ -128,7 +139,7 @@ def train(argv):
             valid_loss = valid_xy_loss + valid_obj_loss + valid_no_obj_loss
             print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
             (e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
-            
+
     print('\n\nmin_loss: %f\nxy_loss:%f\nobj_loss:%f\nno_obj_loss:%f' % (
         min_loss, min_xy_loss, min_obj_loss, min_obj_loss))
     print('In epoch: ', min_loss_epoch)
