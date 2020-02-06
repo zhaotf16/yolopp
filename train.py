@@ -42,7 +42,11 @@ def train(argv):
     gaussian_blur_label = np.copy(label)
     array = np.concatenate((array, gaussian_blur_data))
     label = np. concatenate((label, gaussian_blur_label))
-
+    print('data augmentation: dropout...')
+    dropout_data = util.dropout(array, 0.1)
+    dropout_label = np.copy(label)
+    array = np.concatenate((array, dropout_data))
+    label = np.concatenate((label, dropout_label))
 
     print(array.shape, label.shape)
     batchsize = FLAGS.batch_size
