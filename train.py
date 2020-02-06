@@ -47,16 +47,21 @@ def train(argv):
     dropout_label = np.copy(label)
     #array = np.concatenate((array, dropout_data))
     #label = np.concatenate((label, dropout_label))
-    print('data augmentation: contrast normalization...')
-    cn_data = util.contrastNormalization(array)
-    cn_label = np.copy(label)
+    #print('data augmentation: contrast normalization...')
+    #cn_data = util.contrastNormalization(array)
+    #cn_label = np.copy(label)
     #array = np.concatenate((array, cn_data))
     #label = np.concatenate((label, cn_label))
+    print('data augmentation: fliplr...')
+    fliplr_data, fliplr_label = util.fliplr(array, label)
+    print('data augmentation: flipud...')
+    flipud_data, flipud_label = util.flipud(array, label)
+
     array = np.concatenate((
-        array, average_blur_data, gaussian_blur_data, dropout_data, cn_data
+        array, average_blur_data, gaussian_blur_data, dropout_data, fliplr_data, flipud_data
     ))
     label = np.concatenate((
-        label, average_blur_label, gaussian_blur_label, dropout_label, cn_label
+        label, average_blur_label, gaussian_blur_label, dropout_label, fliplr_label, flipud_label
     ))
 
     print(array.shape, label.shape)
@@ -81,9 +86,9 @@ def train(argv):
     valid_frequency = 3
     min_loss = 1000000
     min_loss_epoch = -1
-    min_xy_loss = 100000
-    min_obj_loss = 100000
-    min_no_obj_loss = 100000
+    #min_xy_loss = 100000
+    #min_obj_loss = 100000
+    #min_no_obj_loss = 100000
     for e in range(epochs):
         if e > 200:
             optimizer.learning_rate = 0.0005
@@ -111,13 +116,11 @@ def train(argv):
                 loss = xy_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
                 #record epoch where loss reaches minimum
                 if loss < min_loss:
-                    min_loss, min_xy_loss, min_obj_loss, min_no_obj_loss = ...
-                    loss, xy_loss, obj_loss, no_obj_loss
-                    min_loss_epoch = e
+                    min_loss = loss
+                    min_loss_epoch = e + 1
 
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
-        total_loss /= batch_num
         print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" % 
             (e+1, xy_loss, obj_loss, no_obj_loss, loss))
         if e % valid_frequency == 0:
@@ -140,9 +143,7 @@ def train(argv):
             print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
             (e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
 
-    print('\n\nmin_loss: %f\nxy_loss:%f\nobj_loss:%f\nno_obj_loss:%f' % (
-        min_loss, min_xy_loss, min_obj_loss, min_obj_loss))
-    print('In epoch: ', min_loss_epoch)
+    print('min loss: %f in epoch: %d' % (min_loss, min_loss_epoch))
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:

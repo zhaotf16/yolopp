@@ -84,8 +84,21 @@ def contrastNormalization(data):
         dst[i] -= np.mean(dst[i])
     return dst
 
-def flip(data, label):
-    pass
+def fliplr(data, label):
+    dst_data = np.copy(data)
+    dst_label = np.copy(label)
+    for i in range(data.shape[0]):
+        dst_data[i] = np.fliplr(dst_data[i])
+        dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
+    return dst_data, dst_label
+
+def flipud(data, label):
+    dst_data = np.copy(data)
+    dst_label = np.copy(label)
+    for i in range(dst.shape[0]):
+        dst_data[i] = np.flipud(dst_data[i])
+        dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
+    return dst_data, dst_label
 
 if __name__ == '__main__':
     data = np.random.rand(2,3,3,1)
