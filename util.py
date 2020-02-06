@@ -87,7 +87,7 @@ def contrastNormalization(data):
 def fliplr(data, label):
     dst_data = np.copy(data)
     dst_label = np.copy(label)
-    for i in range(data.shape[0]):
+    for i in range(dst_data.shape[0]):
         dst_data[i] = np.fliplr(dst_data[i])
         dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
     return dst_data, dst_label
@@ -95,16 +95,21 @@ def fliplr(data, label):
 def flipud(data, label):
     dst_data = np.copy(data)
     dst_label = np.copy(label)
-    for i in range(dst.shape[0]):
+    for i in range(dst_data.shape[0]):
         dst_data[i] = np.flipud(dst_data[i])
         dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
     return dst_data, dst_label
 
 if __name__ == '__main__':
     data = np.random.rand(2,3,3,1)
-    print(data)
-    dst = contrastNormalization(data)
-    print(dst)
+    label = np.random.rand(2,3,3,5)
+    print(data[0,:,:,:])
+    data1, label1 = fliplr(data, label)
+    print(label[0,:,:,0], label1[0,:,:,0])
+    data2, label2 = flipud(data, label)
+    print(label[0,:,:,1], label2[0,:,:,1])
+    #dst = contrastNormalization(data)
+    #print(dst)
     #blur = averageBlur(data, (3,8))
     #blur = gaussianBlur(data, (0,3))
     #blur = dropout(data, dropout_rate=0.1)
