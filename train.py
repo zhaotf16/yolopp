@@ -65,6 +65,12 @@ def train(argv):
     ))
 
     print(array.shape, label.shape)
+    #shuffle
+    index = [i for i in range(array.shape[0])]
+    np.random.shuffle(index)
+    array = array[index, ...]
+    label = label[index, ...]
+
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
     learning_rate = 0.001
