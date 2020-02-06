@@ -73,7 +73,7 @@ def dropout(data, dropout_rate):
         mean = np.mean(dst[k, ...])
         for i in range(dst.shape[1]):
             for j in range(dst.shape[2]):
-                tmp = np.random.randint(0,11)
+                tmp = np.random.randint(0, max_randint+1)
                 if tmp % 10 == 0:
                     dst[k, i, j] = mean
     return dst
@@ -83,10 +83,11 @@ def flip(data, label):
     pass
 
 if __name__ == '__main__':
-    data = np.random.rand(2,1024,1024,1)
+    #data = np.random.rand(2,1024,1024,1)
     #blur = averageBlur(data, (3,8))
     #blur = gaussianBlur(data, (0,3))
-    blur = dropout(data, dropout_rate=0.1)
-    print(blur.shape)
-    result = np.concatenate((data, blur))
-    print(result.shape)
+    #blur = dropout(data, dropout_rate=0.1)
+    #print(blur.shape)
+    #result = np.concatenate((data, blur))
+    #print(result.shape)
+    pass
