@@ -112,7 +112,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     #y_true is relative to the whole image, and so is anchor
     object_scale = 5
     coordinates_scale = 1
-    no_object_scale = 0.5
+    no_object_scale = 1
     #pred_xy is ratio to a single cell
     pred_xy, pred_wh = y_pred[..., 0:2], y_pred[..., 2:4]
     pred_xy = tf.sigmoid(pred_xy)
@@ -153,7 +153,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.9):
     obj_loss = tf.reduce_sum(tf.square(true_confidence - pred_confidence), axis=-1)
     #obj_loss = tf.keras.losses.binary_crossentropy(true_confidence, pred_confidence)
     #obj_loss = object_scale * mask * obj_loss + no_object_scale * (1 - mask) * obj_loss
-    no_obj_loss = (1 - mask) * no_object_scale * obj_loss * ignore_mask
+    no_obj_loss = (1 - mask) * no_object_scale * obj_loss# * ignore_mask
     obj_loss = object_scale * mask * obj_loss
     no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1, 2))
     obj_loss = tf.reduce_sum(obj_loss, axis=(1, 2))

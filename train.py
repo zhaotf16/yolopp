@@ -1,4 +1,4 @@
-import util
+import augmenter
 import mrcHelper
 import starHelper
 import preprocess
@@ -33,29 +33,29 @@ def train(argv):
     
     #TODO: offline data augmentation
     print('data augmentation: average blurring...')
-    average_blur_data = util.averageBlur(array, (3, 8))
+    average_blur_data = augmenter.averageBlur(array, (3, 8))
     average_blur_label = np.copy(label)
     #array = np.concatenate((array, average_blur_data))
     #label = np.concatenate((label, average_blur_label))
     print('data augmentation: gaussian blurring...')
-    gaussian_blur_data = util.gaussianBlur(array, (0, 3))
+    gaussian_blur_data = augmenter.gaussianBlur(array, (0, 3))
     gaussian_blur_label = np.copy(label)
     #array = np.concatenate((array, gaussian_blur_data))
     #label = np. concatenate((label, gaussian_blur_label))
     print('data augmentation: dropout...')
-    dropout_data = util.dropout(array, 0.1)
+    dropout_data = augmenter.dropout(array, 0.1)
     dropout_label = np.copy(label)
     #array = np.concatenate((array, dropout_data))
     #label = np.concatenate((label, dropout_label))
     #print('data augmentation: contrast normalization...')
-    #cn_data = util.contrastNormalization(array)
+    #cn_data = augmenter.contrastNormalization(array)
     #cn_label = np.copy(label)
     #array = np.concatenate((array, cn_data))
     #label = np.concatenate((label, cn_label))
     print('data augmentation: fliplr...')
-    fliplr_data, fliplr_label = util.fliplr(array, label)
+    fliplr_data, fliplr_label = augmenter.fliplr(array, label)
     print('data augmentation: flipud...')
-    flipud_data, flipud_label = util.flipud(array, label)
+    flipud_data, flipud_label = augmenter.flipud(array, label)
 
     array = np.concatenate((
         array, average_blur_data, gaussian_blur_data, dropout_data, fliplr_data, flipud_data
