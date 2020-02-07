@@ -103,21 +103,24 @@ def train(argv):
         batch_num = np.shape(array)[0] // batchsize
         for i in range(batch_num):
             index = i * batchsize
-            x = array[index:index+batchsize, ...]
-            y_true = label[index:index+batchsize, ...]
+            x = np.copy(array[index:index+batchsize, ...])
+            y_true = np.copy(label[index:index+batchsize, ...])
             augType = np.random.randint(0,4)
+            #select augmentation method randomly
             if augType == 0:
                 x = augmenter.averageFilter(x, (3,8))
             elif augType == 1:
                 x = augmenter.gaussianBlur(x, (0,3))
             elif augType == 2:
                 x = augmenter.dropout(x, 0.1)
+            elif augType == 3:
+                x = augmenter.gaussianNoise(x)
+            elif augType == 4:
+                x = augmenter.contrastNormalization(x)
+            elif augType == 5:
+                x, y_true = augmenter.flip(x, y_true)
+            
             with tf.GradientTape() as tape:
-                #debug: regularization
-                #loss_regularization = []
-                #for p in net.trainable_variables:
-                #    loss_regularization.append(tf.nn.l2_loss(p))
-                #loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
