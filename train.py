@@ -32,19 +32,19 @@ def train(argv):
     )
     
     #TODO: offline data augmentation
-    print('data augmentation: average blurring...')
-    average_blur_data = augmenter.averageBlur(array, (3, 8))
-    average_blur_label = np.copy(label)
+    #print('data augmentation: average blurring...')
+    #average_blur_data = augmenter.averageBlur(array, (3, 8))
+    #average_blur_label = np.copy(label)
     #array = np.concatenate((array, average_blur_data))
     #label = np.concatenate((label, average_blur_label))
-    print('data augmentation: gaussian blurring...')
-    gaussian_blur_data = augmenter.gaussianBlur(array, (0, 3))
-    gaussian_blur_label = np.copy(label)
+    #print('data augmentation: gaussian blurring...')
+    #gaussian_blur_data = augmenter.gaussianBlur(array, (0, 3))
+    #gaussian_blur_label = np.copy(label)
     #array = np.concatenate((array, gaussian_blur_data))
     #label = np. concatenate((label, gaussian_blur_label))
-    print('data augmentation: dropout...')
-    dropout_data = augmenter.dropout(array, 0.1)
-    dropout_label = np.copy(label)
+    #print('data augmentation: dropout...')
+    #dropout_data = augmenter.dropout(array, 0.1)
+    #dropout_label = np.copy(label)
     #array = np.concatenate((array, dropout_data))
     #label = np.concatenate((label, dropout_label))
     #print('data augmentation: contrast normalization...')
@@ -57,14 +57,14 @@ def train(argv):
     #print('data augmentation: flipud...')
     #flipud_data, flipud_label = augmenter.flipud(array, label)
 
-    array = np.concatenate((
-        array, average_blur_data, gaussian_blur_data, dropout_data#, fliplr_data, flipud_data
-    ))
-    label = np.concatenate((
-        label, average_blur_label, gaussian_blur_label, dropout_label#, fliplr_label, flipud_label
-    ))
+    #array = np.concatenate((
+    #    array, average_blur_data, gaussian_blur_data, dropout_data#, fliplr_data, flipud_data
+    #))
+    #label = np.concatenate((
+    #    label, average_blur_label, gaussian_blur_label, dropout_label#, fliplr_label, flipud_label
+    #))
 
-    print(array.shape, label.shape)
+    #print(array.shape, label.shape)
     #shuffle
     index = [i for i in range(array.shape[0])]
     np.random.shuffle(index)
@@ -105,26 +105,29 @@ def train(argv):
             index = i * batchsize
             x = array[index:index+batchsize, ...]
             y_true = label[index:index+batchsize, ...]
+            augType = np.random.randint(0,4)
+            if augType == 0:
+                x = augmenter.averageFilter(x, (3,8))
+            elif augType == 1:
+                x = augmenter.gaussianBlur(x, (0,3))
+            elif augType == 2:
+                x = augmenter.dropout(x, 0.1)
             with tf.GradientTape() as tape:
                 #debug: regularization
                 #loss_regularization = []
                 #for p in net.trainable_variables:
                 #    loss_regularization.append(tf.nn.l2_loss(p))
                 #loss_regularization = tf.reduce_sum(tf.stack(loss_regularization))
-
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_sum(no_obj_loss)
-
                 loss = xy_loss + wh_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
-                #record epoch where loss reaches minimum
-                
-
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
+
         print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" % 
             (e+1, xy_loss, obj_loss, no_obj_loss, loss))
         if e % valid_frequency == 0:
@@ -144,11 +147,14 @@ def train(argv):
             valid_obj_loss /= valid_num
             valid_no_obj_loss /= valid_num
             valid_loss = valid_xy_loss + valid_obj_loss + valid_no_obj_loss
+
             print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
             (e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
+            #record epoch where loss reaches minimum
             if valid_loss < min_loss:
                 min_loss = valid_loss
                 min_loss_epoch = e + 1
+
     print('min loss: %f in epoch: %d' % (min_loss, min_loss_epoch))
     net.save_weights('yolopp_weights/', save_format='tf')
 
