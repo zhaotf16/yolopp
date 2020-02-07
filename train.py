@@ -105,7 +105,7 @@ def train(argv):
             index = i * batchsize
             x = np.copy(array[index:index+batchsize, ...])
             y_true = np.copy(label[index:index+batchsize, ...])
-            augType = np.random.randint(0,4)
+            augType = np.random.randint(0,6)
             #select augmentation method randomly
             if augType == 0:
                 x = augmenter.averageFilter(x, (3,8))
@@ -119,7 +119,7 @@ def train(argv):
                 x = augmenter.contrastNormalization(x)
             elif augType == 5:
                 x, y_true = augmenter.flip(x, y_true)
-            
+
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)

@@ -86,7 +86,10 @@ def contrastNormalization(data):
     return dst
 
 def gaussianNoise(data):
-    return None
+    dst = np.copy(data)
+    for i in range(dst.shape[0]):
+        dst[i] += np.random.normal(0.0, np.std(dst[i])*0.1, dst[i].shape)
+    return dst
 
 def flip(data, label):
     dst_data = np.copy(data)
@@ -95,10 +98,16 @@ def flip(data, label):
         dst_data[i] = np.fliplr(dst_data[i])
         dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
         dst_label[i,:,:,0] = np.flip(dst_label[i,:,:,0])
+        dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
         dst_label[i,:,:,1] = np.flip(dst_label[i,:,:,1])
+
         dst_label[i,:,:,2] = np.flip(dst_label[i,:,:,2])
         dst_label[i,:,:,3] = np.flip(dst_label[i,:,:,3])
         dst_label[i,:,:,4] = np.flip(dst_label[i,:,:,4])
+
+        dst_label[i,:,:,0] *= dst_label[i,:,:,4]
+        dst_label[i,:,:,1] *= dst_label[i,:,:,4]
+        
     return dst_data, dst_label
 
 #TODO: use vectorized operation to accelerate
