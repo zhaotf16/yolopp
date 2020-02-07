@@ -56,7 +56,7 @@ def pick(argv):
             for a in range(w):
                 for b in range(h):
                     #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
-                    if confidence[a, b] > 0.5:
+                    if confidence[a, b] > 0.3:
                         star.content.append((
                             (a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
                         ))

@@ -174,7 +174,7 @@ def train(argv):
             for a in range(w):
                 for b in range(h):
                     #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
-                    if confidence[a, b] > 0.7:
+                    if confidence[a, b] > 0.3:
                         star.content.append((
                             (a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
                         ))
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
     flags.DEFINE_string("label_path", None, "path of labels(star, etc.)")
     flags.DEFINE_integer("batch_size", 1, "batch size of training data")
-    flags.DEFINE_integer("epoch", 300, "total_epochs")
+    flags.DEFINE_integer("epoch", 400, "total_epochs")
     flags.DEFINE_bool("use_limit", True, "set gpu memory limit") 
     flags.DEFINE_string("save_weights", "../yolopp_weights", "dir to store weights")
     
