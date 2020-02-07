@@ -52,16 +52,16 @@ def train(argv):
     #cn_label = np.copy(label)
     #array = np.concatenate((array, cn_data))
     #label = np.concatenate((label, cn_label))
-    print('data augmentation: fliplr...')
-    fliplr_data, fliplr_label = augmenter.fliplr(array, label)
-    print('data augmentation: flipud...')
-    flipud_data, flipud_label = augmenter.flipud(array, label)
+    #print('data augmentation: fliplr...')
+    #fliplr_data, fliplr_label = augmenter.fliplr(array, label)
+    #print('data augmentation: flipud...')
+    #flipud_data, flipud_label = augmenter.flipud(array, label)
 
     array = np.concatenate((
-        array, average_blur_data, gaussian_blur_data, dropout_data, fliplr_data, flipud_data
+        array, average_blur_data, gaussian_blur_data, dropout_data#, fliplr_data, flipud_data
     ))
     label = np.concatenate((
-        label, average_blur_label, gaussian_blur_label, dropout_label, fliplr_label, flipud_label
+        label, average_blur_label, gaussian_blur_label, dropout_label#, fliplr_label, flipud_label
     ))
 
     print(array.shape, label.shape)
@@ -73,7 +73,7 @@ def train(argv):
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
-    learning_rate = 0.001
+    learning_rate = 0.0001
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
@@ -96,10 +96,10 @@ def train(argv):
     #min_obj_loss = 100000
     #min_no_obj_loss = 100000
     for e in range(epochs):
-        if e > 200:
-            optimizer.learning_rate = 0.0005
-        elif e > 400:
-            optimizer.learning_rate = 0.0002
+        #if e > 200:
+        #    optimizer.learning_rate = 0.0005
+        #elif e > 400:
+        #    optimizer.learning_rate = 0.0002
         batch_num = np.shape(array)[0] // batchsize
         for i in range(batch_num):
             index = i * batchsize
@@ -119,11 +119,9 @@ def train(argv):
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_sum(no_obj_loss)
 
-                loss = xy_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
+                loss = xy_loss + wh_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
                 #record epoch where loss reaches minimum
-                if loss < min_loss:
-                    min_loss = loss
-                    min_loss_epoch = e + 1
+                
 
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
@@ -148,7 +146,9 @@ def train(argv):
             valid_loss = valid_xy_loss + valid_obj_loss + valid_no_obj_loss
             print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
             (e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
-
+            if valid_loss < min_loss:
+                min_loss = valid_loss
+                min_loss_epoch = e + 1
     print('min loss: %f in epoch: %d' % (min_loss, min_loss_epoch))
     net.save_weights('yolopp_weights/', save_format='tf')
 
