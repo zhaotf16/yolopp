@@ -66,6 +66,7 @@ def gaussianBlur(data, sigma):
         dst[i, ...] = gaussianFilter(image, sig, size)
     return dst
 
+#TODO: use vectorized operation to accelerate
 def dropout(data, dropout_rate):
     max_randint = int(dropout_rate * 100)
     dst = np.copy(data)
@@ -84,6 +85,7 @@ def contrastNormalization(data):
         dst[i] -= np.mean(dst[i])
     return dst
 
+#TODO: use vectorized operation to accelerate
 def fliplr(data, label):
     dst_data = np.copy(data)
     dst_label = np.copy(label)
@@ -94,6 +96,7 @@ def fliplr(data, label):
         dst_label[i,:,:,4] = np.fliplr(dst_label[i,:,:,4])
     return dst_data, dst_label
 
+#TODO: use vectorized operation to accelerate
 def flipud(data, label):
     dst_data = np.copy(data)
     dst_label = np.copy(label)
