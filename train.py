@@ -96,7 +96,9 @@ def train(argv):
             augType = np.random.randint(0,5)
             #select augmentation method randomly
             if augType == 0:
-                x = augmenter.averageFilter(x, (3,8))
+                size = np.random.randint(1,4)
+                size = size * 2 + 1
+                x = augmenter.averageBlur(x, (3,8))
             elif augType == 1:
                 x = augmenter.gaussianBlur(x, (0,3))
             elif augType == 2:
