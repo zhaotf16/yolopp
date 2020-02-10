@@ -77,11 +77,6 @@ def train(argv):
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
-    #debug:
-    #array = np.expand_dims(array[0, ...], axis=0)
-    #label = np.expand_dims(label[0, ...], axis=0)
-    #batchsize = 1
-    #net.load_weights('yolopp_weights/')
     valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
     valid = preprocess.mrc2array(valid, image_size=1024)
@@ -92,20 +87,13 @@ def train(argv):
     valid_frequency = 3
     min_loss = 1000000
     min_loss_epoch = -1
-    #min_xy_loss = 100000
-    #min_obj_loss = 100000
-    #min_no_obj_loss = 100000
     for e in range(epochs):
-        #if e > 200:
-        #    optimizer.learning_rate = 0.0005
-        #elif e > 400:
-        #    optimizer.learning_rate = 0.0002
         batch_num = np.shape(array)[0] // batchsize
         for i in range(batch_num):
             index = i * batchsize
             x = np.copy(array[index:index+batchsize, ...])
             y_true = np.copy(label[index:index+batchsize, ...])
-            augType = np.random.randint(0,6)
+            augType = np.random.randint(0,5)
             #select augmentation method randomly
             if augType == 0:
                 x = augmenter.averageFilter(x, (3,8))
@@ -133,6 +121,7 @@ def train(argv):
 
         print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" % 
             (e+1, xy_loss, obj_loss, no_obj_loss, loss))
+
         if e % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0, 0.0
@@ -162,6 +151,7 @@ def train(argv):
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:
+    '''
     batchsize = 2
     mrc = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     array = preprocess.mrc2array(mrc, image_size=1024)
@@ -189,7 +179,7 @@ def train(argv):
                         ))
             stars.append(star)
     starHelper.write_star(stars, "../dataset/yolopp")
-    
+    '''
 if __name__ == '__main__':
     FLAGS = flags.FLAGS
     flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
