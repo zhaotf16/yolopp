@@ -38,7 +38,6 @@ def train(argv):
     #array = np.concatenate((array, average_blur_data))
     #label = np.concatenate((label, average_blur_label))
     #print('data augmentation: gaussian blurring...')
-    #gaussian_blur_data = augmenter.gaussianBlur(array, (0, 3))
     #gaussian_blur_label = np.copy(label)
     #array = np.concatenate((array, gaussian_blur_data))
     #label = np. concatenate((label, gaussian_blur_label))
@@ -93,22 +92,8 @@ def train(argv):
             index = i * batchsize
             x = np.copy(array[index:index+batchsize, ...])
             y_true = np.copy(label[index:index+batchsize, ...])
-            augType = np.random.randint(0,5)
-            #select augmentation method randomly
-            if augType == 0:
-                size = np.random.randint(1,4)
-                size = size * 2 + 1
-                x = augmenter.averageBlur(x, (3,8))
-            elif augType == 1:
-                x = augmenter.gaussianBlur(x, (0,3))
-            elif augType == 2:
-                x = augmenter.dropout(x, 0.1)
-            elif augType == 3:
-                x = augmenter.gaussianNoise(x)
-            elif augType == 4:
-                x = augmenter.contrastNormalization(x)
-            elif augType == 5:
-                x, y_true = augmenter.flip(x, y_true)
+            
+            x, y_true = augmenter.augment(x, y_true)
 
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
@@ -117,7 +102,7 @@ def train(argv):
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_sum(no_obj_loss)
-                loss = xy_loss + wh_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
+                loss = xy_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
 

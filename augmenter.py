@@ -1,6 +1,38 @@
 
 import numpy as np
 
+def augment(x, y):
+    #online data augmentation
+    #flip
+    flipType = np.random.randint(0, 3)
+    if flipType == 0:
+        pass
+    elif flipType == 1:
+        pass
+    elif flipType == 2:
+        pass
+    #blurring
+    blurType = np.random.randint(0, 3)
+    if blurType == 0:
+        x = averageBlur(x, (3, 8))
+    elif blurType == 1:
+        x = gaussianBlur(x, (0, 3))
+    elif blurType == 2:
+        pass
+    #dropout
+    dropoutType = np.random.randint(0, 2)
+    if dropoutType == 0:
+        x = dropout(x, 0.1)
+    elif dropoutType == 1:
+        pass
+    #noise
+    noiseType = np.random.randint(0, 2)
+    if noiseType == 0:
+        x = gaussianNoise(x)
+    elif noiseType == 1:
+        pass
+    return x, y
+
 def averageFilter(data, size):
     input_copy = np.copy(data)
     filter_template = np.ones((size, size), dtype=np.float32)
