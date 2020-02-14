@@ -43,7 +43,10 @@ def train(argv):
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
-    
+    #debug:
+    array = valid[0:24, ...]
+    batchsize = 6
+    #debug#
     valid_frequency = 10
     min_loss = 1000000
     min_loss_epoch = -1
@@ -63,21 +66,21 @@ def train(argv):
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
-                wh_loss = tf.reduce_mean(wh_loss)
+                #wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_mean(no_obj_loss)
                 loss = xy_loss + obj_loss + no_obj_loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
 
-        print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" % 
+        print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss:%f" % 
             (e+1, xy_loss, obj_loss, no_obj_loss, loss))
         if e % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0, 0.0
-            for i in range(valid_num):
-                valid_data = np.expand_dims(valid[i, ...], axis=0)
-                valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
+            for i in range(6):
+                valid_data = np.expand_dims(valid[24+i, ...], axis=0)
+                valid_true = np.expand_dims(valid_labels[24+i, ...], axis=0)
                 valid_pred = net(valid_data, training=False)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(valid_pred, valid_true)
                 valid_xy_loss += xy_loss
