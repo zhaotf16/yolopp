@@ -181,10 +181,6 @@ def PhosaurusNet_test():
     y_true = np.expand_dims(y_true.astype(np.float32), axis=0)
 
     return yolo_loss(y_pred, y_true)
-    #print(y.shape)
-    #model.summary()
-    #box_xy, box_wh, confidence = yolo_head(y)
-    #print(box_xy.shape, box_wh.shape, confidence.shape)
 
 if __name__ == '__main__':
    PhosaurusNet_test()
