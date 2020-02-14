@@ -30,45 +30,6 @@ def train(argv):
     label = preprocess.star2label(star, 1024, grid_size=64, 
         particle_size=(220/7420*1024, 220/7676*1024),
     )
-    
-    #TODO: offline data augmentation
-    #print('data augmentation: average blurring...')
-    #average_blur_data = augmenter.averageBlur(array, (3, 8))
-    #average_blur_label = np.copy(label)
-    #array = np.concatenate((array, average_blur_data))
-    #label = np.concatenate((label, average_blur_label))
-    #print('data augmentation: gaussian blurring...')
-    #gaussian_blur_label = np.copy(label)
-    #array = np.concatenate((array, gaussian_blur_data))
-    #label = np. concatenate((label, gaussian_blur_label))
-    #print('data augmentation: dropout...')
-    #dropout_data = augmenter.dropout(array, 0.1)
-    #dropout_label = np.copy(label)
-    #array = np.concatenate((array, dropout_data))
-    #label = np.concatenate((label, dropout_label))
-    #print('data augmentation: contrast normalization...')
-    #cn_data = augmenter.contrastNormalization(array)
-    #cn_label = np.copy(label)
-    #array = np.concatenate((array, cn_data))
-    #label = np.concatenate((label, cn_label))
-    #print('data augmentation: fliplr...')
-    #fliplr_data, fliplr_label = augmenter.fliplr(array, label)
-    #print('data augmentation: flipud...')
-    #flipud_data, flipud_label = augmenter.flipud(array, label)
-
-    #array = np.concatenate((
-    #    array, average_blur_data, gaussian_blur_data, dropout_data#, fliplr_data, flipud_data
-    #))
-    #label = np.concatenate((
-    #    label, average_blur_label, gaussian_blur_label, dropout_label#, fliplr_label, flipud_label
-    #))
-
-    #print(array.shape, label.shape)
-    #shuffle
-    index = [i for i in range(array.shape[0])]
-    np.random.shuffle(index)
-    array = array[index, ...]
-    label = label[index, ...]
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
@@ -83,32 +44,34 @@ def train(argv):
         (220/7420*1024, 220/7676*1024)
     )
     
-    valid_frequency = 3
+    valid_frequency = 10
     min_loss = 1000000
     min_loss_epoch = -1
     for e in range(epochs):
+        #shuffle
+        index = [i for i in range(array.shape[0])]
+        np.random.shuffle(index)
+        array = array[index, ...]
+        label = label[index, ...]
         batch_num = np.shape(array)[0] // batchsize
         for i in range(batch_num):
             index = i * batchsize
             x = np.copy(array[index:index+batchsize, ...])
             y_true = np.copy(label[index:index+batchsize, ...])
-            
             x, y_true = augmenter.augment(x, y_true)
-
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 xy_loss = tf.reduce_mean(xy_loss)
                 wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
-                no_obj_loss = tf.reduce_sum(no_obj_loss)
-                loss = xy_loss + obj_loss + no_obj_loss #+ 0.0001 * loss_regularization
+                no_obj_loss = tf.reduce_mean(no_obj_loss)
+                loss = xy_loss + obj_loss + no_obj_loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
 
         print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" % 
             (e+1, xy_loss, obj_loss, no_obj_loss, loss))
-
         if e % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0, 0.0
