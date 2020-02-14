@@ -23,13 +23,13 @@ def train(argv):
     data_path = FLAGS.data_path
     label_path = FLAGS.label_path
 
-    mrc = mrcHelper.load_mrc_file(data_path)
-    star = starHelper.read_all_star(label_path)
+    #mrc = mrcHelper.load_mrc_file(data_path)
+    #star = starHelper.read_all_star(label_path)
     
-    array = preprocess.mrc2array(mrc, image_size=1024)
-    label = preprocess.star2label(star, 1024, grid_size=64, 
-        particle_size=(220/7420*1024, 220/7676*1024),
-    )
+    #array = preprocess.mrc2array(mrc, image_size=1024)
+    #label = preprocess.star2label(star, 1024, grid_size=64, 
+    #    particle_size=(220/7420*1024, 220/7676*1024),
+    #)
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
@@ -44,11 +44,10 @@ def train(argv):
         (220/7420*1024, 220/7676*1024)
     )
     #debug:
-    array = valid[0:24, ...]
-    label = valid[0:24, ...]
-    valid = valid[24:, ...]
-    valid_labels = valid_labels[24:, ...]
-    batchsize = 6
+    array = valid[0:20, ...]
+    label = valid_labels[0:20, ...]
+    valid = valid[20:30, ...]
+    valid_labels = valid_labels[20:30, ...]
     #debug#
     valid_frequency = 10
     min_loss = 1000000
