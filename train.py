@@ -93,16 +93,25 @@ def train(argv):
                             wrong_picked += 1
                         elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
                             miss += 1
-                #xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(valid_pred, valid_true)
-                #valid_xy_loss += xy_loss
-                #valid_wh_loss += wh_loss
-                #valid_obj_loss += obj_loss
-                #valid_no_obj_loss += no_obj_loss
-            #picked /= valid_num
-            #miss /= valid_num
-            #wrong_picked /= valid_num
             print(
                 "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
+                (e+1, picked, miss, wrong_picked)
+            )
+            picked, miss, wrong_picked = 0, 0, 0
+            for i in range(np.shape(array)[0]):
+                data = np.expand_dims(array[i, ...], axis=0)
+                true = np.expand_dims(label[i, ...], axis=0)
+                pred = net(data, training=False)
+                for x in range(64):
+                    for y in range(64):
+                        if tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 1.0:
+                            picked += 1
+                        elif tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 0:
+                            wrong_picked += 1
+                        elif tf.sigmoid(pred[0,x,y,4]) < 0.5 and true[0,x,y,4] == 1.0:
+                            miss += 1
+            print(
+                "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
                 (e+1, picked, miss, wrong_picked)
             )
             #valid_xy_loss /= valid_num
