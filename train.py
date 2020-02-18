@@ -87,11 +87,11 @@ def train(argv):
                 valid_pred = net(valid_data, training=False)
                 for x in range(64):
                     for y in range(64):
-                        if valid_pred[0,x,y,4] > 0.5 and valid_true[0,x,y,4] == 1.0:
+                        if tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 1.0:
                             picked += 1
-                        elif valid_pred[0,x,y,4] > 0.5 and valid_true[0,x,y,4] == 0:
+                        elif tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 0:
                             wrong_picked += 1
-                        elif valid_pred[0,x,y,4] < 0.5 and valid_true[0,x,y,4] == 1.0:
+                        elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
                             miss += 1
                 #xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(valid_pred, valid_true)
                 #valid_xy_loss += xy_loss

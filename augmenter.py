@@ -4,13 +4,16 @@ import numpy as np
 def augment(x, y):
     #online data augmentation
     #flip
-    flipType = np.random.randint(0, 3)
+    flipType = np.random.randint(0, 4)
     if flipType == 0:
         pass
     elif flipType == 1:
-        pass
+        x, y = fliplr(x, y)
     elif flipType == 2:
         pass
+    elif flipType == 3:
+        pass
+    return x, y
     #blurring
     blurType = np.random.randint(0, 3)
     if blurType == 0:
@@ -41,7 +44,6 @@ def averageFilter(data, size):
     input_copy = input_copy[..., 0]
     output = np.copy(input_copy)
     m, n = input_copy.shape[0], input_copy.shape[1]
-
     for i in range(pad, m - pad):
         for j in range(pad, n - pad):
             output[i, j] = np.sum(

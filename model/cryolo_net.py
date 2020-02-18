@@ -112,7 +112,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     #y_true is relative to the whole image, and so is anchor
     object_scale = 5
     coordinates_scale = 1
-    no_object_scale = 1
+    no_object_scale = 5
     #pred_xy is ratio to a single cell
     pred_xy, pred_wh = y_pred[..., 0:2], y_pred[..., 2:4]
     pred_xy = tf.sigmoid(pred_xy)
