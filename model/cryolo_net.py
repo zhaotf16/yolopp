@@ -172,8 +172,9 @@ def yolov2():
     conv21 = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_21', use_bias=False)(conv13)
     conv21 = BatchNormalization(name='norm_21')(conv21)
     conv21 = LeakyReLU(alpha=0.1)(conv21)
-    conv21_reshaped = Lambda(space_to_depth_x2, name='space_to_depth')(conv21) 
-    
+    #conv21_reshaped = Lambda(space_to_depth_x2, name='space_to_depth')(conv21) 
+    conv21_reshaped = UpSampling2D(2, name='upsampling')(conv21)
+
     x = concatenate([conv21_reshaped, conv20])
     
     # Layer 22
