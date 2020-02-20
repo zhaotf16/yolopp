@@ -34,13 +34,10 @@ def train(argv):
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
     learning_rate = 0.0001
-    #net = cn.PhosaurusNet()
-
-    #build and compile the model
-    net = cn.yolov2()
+    net = cn.PhosaurusNet()
     print(net.summary())
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
-    #net.compile(optimizer=optimizer, loss=cn.yolo_loss, run_eagerly=True)
+
 
     valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")

@@ -1,8 +1,5 @@
 import tensorflow as tf
 from model.darknet import Darknet19, DarknetConv_BN_Leaky
-from tensorflow.keras.layers import Reshape, Activation, Conv2D, Input, \
-    MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, LeakyReLU, \
-    concatenate, UpSampling2D
 #Local settings
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
@@ -12,7 +9,7 @@ tf.config.experimental.set_virtual_device_configuration(
     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
 )
 #anchor = tf.constant([[80., 80.]], dtype=tf.float32) / 1024
-
+'''
 class PhosaurusNet(Darknet19):
     def __init__(self):
         super().__init__()
@@ -52,140 +49,91 @@ class PhosaurusNet(Darknet19):
         x = self.dropout(x, training=training)
         x = self.conv7(x, training=training)
         return x
+'''
+class PhosaurusNet(tf.keras.models.Model):
+    def __init__(self):
+        super().__init__()
+        # Layer 1
+        self.conv1 = DarknetConv_BN_Leaky(32, (3,3))
+        self.pool1 = tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=2)
 
-def space_to_depth_x2(x):
-    return tf.nn.space_to_depth(x, block_size=2)
+        # Layer 2
+        self.conv2 = DarknetConv_BN_Leaky(64, (3,3))
+        self.pool2 = tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=2)
 
-def yolov2():
-    x = inputs = tf.keras.Input(shape=(1024,1024,1))
-    #Layer1
-    x = Conv2D(32, (3,3), strides=(1,1), padding='same', name='conv_1', use_bias=False)(x)
-    x = BatchNormalization(name='norm_1')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
+        # Layer 3 - 5
+        self.conv3 = DarknetConv_BN_Leaky(128, (3,3))
+        self.conv4 = DarknetConv_BN_Leaky(64, (1,1))
+        self.conv5 = DarknetConv_BN_Leaky(128, (3,3))
+        self.pool5 = tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=2)
 
-    #Layer2
-    x = Conv2D(64, (3,3), strides=(1,1), padding='same', name='conv_2', use_bias=False)(x)
-    x = BatchNormalization(name='norm_2')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
+        # Layer 6 - 8
+        self.conv6 = DarknetConv_BN_Leaky(256, (3,3))
+        self.conv7 = DarknetConv_BN_Leaky(128, (1,1))
+        self.conv8 = DarknetConv_BN_Leaky(256, (3,3))
+        self.pool8 = tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=2)
 
-    # Layer 3
-    x = Conv2D(128, (3,3), strides=(1,1), padding='same', name='conv_3', use_bias=False)(x)
-    x = BatchNormalization(name='norm_3')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 4
-    x = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_4', use_bias=False)(x)
-    x = BatchNormalization(name='norm_4')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 5
-    x = Conv2D(128, (3,3), strides=(1,1), padding='same', name='conv_5', use_bias=False)(x)
-    x = BatchNormalization(name='norm_5')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    
-    # Layer 6
-    x = Conv2D(256, (3,3), strides=(1,1), padding='same', name='conv_6', use_bias=False)(x)
-    x = BatchNormalization(name='norm_6')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 7
-    x = Conv2D(128, (1,1), strides=(1,1), padding='same', name='conv_7', use_bias=False)(x)
-    x = BatchNormalization(name='norm_7')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 8
-    x = Conv2D(256, (3,3), strides=(1,1), padding='same', name='conv_8', use_bias=False)(x)
-    x = BatchNormalization(name='norm_8')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    
-    # Layer 9
-    x = Conv2D(512, (3,3), strides=(1,1), padding='same', name='conv_9', use_bias=False)(x)
-    x = BatchNormalization(name='norm_9')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 10
-    x = Conv2D(256, (1,1), strides=(1,1), padding='same', name='conv_10', use_bias=False)(x)
-    x = BatchNormalization(name='norm_10')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 11
-    x = Conv2D(512, (3,3), strides=(1,1), padding='same', name='conv_11', use_bias=False)(x)
-    x = BatchNormalization(name='norm_11')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 12
-    x = Conv2D(256, (1,1), strides=(1,1), padding='same', name='conv_12', use_bias=False)(x)
-    x = BatchNormalization(name='norm_12')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 13
-    x = Conv2D(512, (3,3), strides=(1,1), padding='same', name='conv_13', use_bias=False)(x)
-    x = BatchNormalization(name='norm_13')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    conv13 = x # 
-    
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    
-    # Layer 14
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_14', use_bias=False)(x)
-    x = BatchNormalization(name='norm_14')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 15
-    x = Conv2D(512, (1,1), strides=(1,1), padding='same', name='conv_15', use_bias=False)(x)
-    x = BatchNormalization(name='norm_15')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 16
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_16', use_bias=False)(x)
-    x = BatchNormalization(name='norm_16')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 17
-    x = Conv2D(512, (1,1), strides=(1,1), padding='same', name='conv_17', use_bias=False)(x)
-    x = BatchNormalization(name='norm_17')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 18 - darknet
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_18', use_bias=False)(x)
-    x = BatchNormalization(name='norm_18')(x)
-    darknet = LeakyReLU(alpha=0.1)(x)
-
-    ##################################################################################
-    
-    # Layer 19
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_19', use_bias=False)(darknet)
-    x = BatchNormalization(name='norm_19')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-
-    # Layer 20
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_20', use_bias=False)(x)
-    x = BatchNormalization(name='norm_20')(x)
-    conv20 = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 21
-    conv21 = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_21', use_bias=False)(conv13)
-    conv21 = BatchNormalization(name='norm_21')(conv21)
-    conv21 = LeakyReLU(alpha=0.1)(conv21)
-    #conv21_reshaped = Lambda(space_to_depth_x2, name='space_to_depth')(conv21) 
-    conv21_reshaped = UpSampling2D(2, name='upsampling')(conv21)
-
-    x = concatenate([conv21_reshaped, conv20])
-    
-    # Layer 22
-    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_22', use_bias=False)(x)
-    x = BatchNormalization(name='norm_22')(x)
-    x = LeakyReLU(alpha=0.1)(x)
-    
-    # Layer 23 - output
-    outputs = Conv2D(5, (1,1), strides=(1,1), padding='same', name='conv_23')(x)
-    
-    return tf.keras.models.Model(inputs, outputs)
+        # Layer 9 - 13
+        self.conv9 = DarknetConv_BN_Leaky(512, (3,3))
+        self.conv10 = DarknetConv_BN_Leaky(256, (1,1))
+        self.conv11 = DarknetConv_BN_Leaky(512, (3,3))
+        self.conv12 = DarknetConv_BN_Leaky(256, (1,1))
+        self.conv13 = DarknetConv_BN_Leaky(512, (3,3))
+        self.pool13 = tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=2)
+        
+        # Layer 14 - 21
+        self.conv14 = DarknetConv_BN_Leaky(1024, (3,3))
+        self.conv15 = DarknetConv_BN_Leaky(512, (1,1))
+        self.conv16 = DarknetConv_BN_Leaky(1024, (3,3))
+        self.conv17 = DarknetConv_BN_Leaky(512, (1,1))
+        self.conv18 = DarknetConv_BN_Leaky(1024, (3,3))
+        self.conv19 = DarknetConv_BN_Leaky(1024, (3,3))
+        self.conv20 = DarknetConv_BN_Leaky(1024, (3,3))
+        self.conv21 = DarknetConv_BN_Leaky(1024, (3,3))
+        # Upsampling and concatenate
+        self.upsample = tf.keras.layers.UpSampling2D(2)
+        self.concatenate = tf.keras.layers.Concatenate()
+        # Dropout and output
+        self.dropout = tf.keras.layers.Dropout(0.2)
+        self.output = tf.keras.layers.Conv2D(5, (1,1))
+ 
+    def call(self, input, training=False):
+        # Layer 1
+        x = self.conv1(input, training=training)
+        x = self.pool1(x)
+        # Layer 2
+        x = self.conv2(x, training=training)
+        x = self.pool2(x)
+        # Layer 3 - 5
+        x = self.conv3(x, training=training)
+        x = self.conv4(x, training=training)
+        x = self.conv5(x, training=training)
+        x = self.pool5(x)
+        # Layer 6 - 8
+        x = self.conv6(x, training=training)
+        x = self.conv7(x, training=training)
+        x = self.conv8(x, training=training)
+        # Layer 9 - 13
+        x = self.conv9(x, training=training)
+        x = self.conv10(x, training=training)
+        x = self.conv11(x, training=training)
+        x = self.conv12(x, training=training)
+        x = self.conv13(x, training=training)
+        x = self.pool13(x)
+        y = x
+        # Layer 14 - 21
+        x = self.conv14(x, training=training)
+        x = self.conv15(x, training=training)
+        x = self.conv16(x, training=training)
+        x = self.conv17(x, training=training)
+        x = self.conv18(x, training=training)
+        x = self.conv19(x, training=training)
+        x = self.conv20(x, training=training)
+        x = self.conv21(x, training=training)
+        x = self.upsample(x)
+        x = self.concatenate([x, y])
+        x = self.dropout(x)
+        return x
 
 def yolo_head(features):
     #the output of cnn is (tx, ty, tw, th, confidence)
