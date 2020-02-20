@@ -2,7 +2,7 @@ import tensorflow as tf
 from model.darknet import Darknet19, DarknetConv_BN_Leaky
 from tensorflow.keras.layers import Reshape, Activation, Conv2D, Input, \
     MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, LeakyReLU, \
-    concatenate
+    concatenate, UpSampling2D
 #Local settings
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
