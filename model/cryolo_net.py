@@ -1,6 +1,8 @@
 import tensorflow as tf
 from model.darknet import Darknet19, DarknetConv_BN_Leaky
-
+from tf.keras.layers import Reshape, Activation, Conv2D, Input, \
+    MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, LeakyReLU,
+    concatenate
 #Local settings
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
 cpus = tf.config.experimental.list_physical_devices(device_type='CPU')
@@ -51,6 +53,135 @@ class PhosaurusNet(Darknet19):
         x = self.conv7(x, training=training)
         return x
 
+def yolov2():
+    x = inputs = tf.keras.Input(shape=(1024,1024,1))
+    #Layer1
+    x = Conv2D(32, (3,3), strides=(1,1), padding='same', name='conv_1', use_bias=False)(x)
+    x = BatchNormalization(name='norm_1')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+
+    #Layer2
+    x = Conv2D(64, (3,3), strides=(1,1), padding='same', name='conv_2', use_bias=False)(x)
+    x = BatchNormalization(name='norm_2')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+
+    # Layer 3
+    x = Conv2D(128, (3,3), strides=(1,1), padding='same', name='conv_3', use_bias=False)(x)
+    x = BatchNormalization(name='norm_3')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 4
+    x = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_4', use_bias=False)(x)
+    x = BatchNormalization(name='norm_4')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 5
+    x = Conv2D(128, (3,3), strides=(1,1), padding='same', name='conv_5', use_bias=False)(x)
+    x = BatchNormalization(name='norm_5')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    
+    # Layer 6
+    x = Conv2D(256, (3,3), strides=(1,1), padding='same', name='conv_6', use_bias=False)(x)
+    x = BatchNormalization(name='norm_6')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 7
+    x = Conv2D(128, (1,1), strides=(1,1), padding='same', name='conv_7', use_bias=False)(x)
+    x = BatchNormalization(name='norm_7')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 8
+    x = Conv2D(256, (3,3), strides=(1,1), padding='same', name='conv_8', use_bias=False)(x)
+    x = BatchNormalization(name='norm_8')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    
+    # Layer 9
+    x = Conv2D(512, (3,3), strides=(1,1), padding='same', name='conv_9', use_bias=False)(x)
+    x = BatchNormalization(name='norm_9')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 10
+    x = Conv2D(256, (1,1), strides=(1,1), padding='same', name='conv_10', use_bias=False)(x)
+    x = BatchNormalization(name='norm_10')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 11
+    x = Conv2D(512, (3,3), strides=(1,1), padding='same', name='conv_11', use_bias=False)(x)
+    x = BatchNormalization(name='norm_11')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 12
+    x = Conv2D(256, (1,1), strides=(1,1), padding='same', name='conv_12', use_bias=False)(x)
+    x = BatchNormalization(name='norm_12')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 13
+    x = Conv2D(512, (3,3), strides=(1,1), padding='same', name='conv_13', use_bias=False)(x)
+    x = BatchNormalization(name='norm_13')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    conv13 = x # 
+    
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    
+    # Layer 14
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_14', use_bias=False)(x)
+    x = BatchNormalization(name='norm_14')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 15
+    x = Conv2D(512, (1,1), strides=(1,1), padding='same', name='conv_15', use_bias=False)(x)
+    x = BatchNormalization(name='norm_15')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 16
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_16', use_bias=False)(x)
+    x = BatchNormalization(name='norm_16')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 17
+    x = Conv2D(512, (1,1), strides=(1,1), padding='same', name='conv_17', use_bias=False)(x)
+    x = BatchNormalization(name='norm_17')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 18 - darknet
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_18', use_bias=False)(x)
+    x = BatchNormalization(name='norm_18')(x)
+    darknet = LeakyReLU(alpha=0.1)(x)
+
+    ##################################################################################
+    
+    # Layer 19
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_19', use_bias=False)(darknet)
+    x = BatchNormalization(name='norm_19')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+
+    # Layer 20
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_20', use_bias=False)(x)
+    x = BatchNormalization(name='norm_20')(x)
+    conv20 = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 21
+    conv21 = Conv2D(64, (1,1), strides=(1,1), padding='same', name='conv_21', use_bias=False)(conv13)
+    conv21 = BatchNormalization(name='norm_21')(conv21)
+    conv21 = LeakyReLU(alpha=0.1)(conv21)
+    conv21_reshaped = Lambda(space_to_depth_x2, name='space_to_depth')(conv21) 
+    
+    x = concatenate([conv21_reshaped, conv20])
+    
+    # Layer 22
+    x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_22', use_bias=False)(x)
+    x = BatchNormalization(name='norm_22')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    # Layer 23 - output
+    outputs = Conv2D(5, (1,1), strides=(1,1), padding='same', name='conv_23')(x)
+    
+    return tf.keras.models.Model(inputs, outputs)
 def yolo_head(features):
     #the output of cnn is (tx, ty, tw, th, confidence)
     #tx, ty are relative to a single cell, thus we use sigmoid() plus offset
@@ -110,9 +241,9 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     #y_pred: yolo_output [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true: true_boxes [batch, grid, grid, (x, y, w, h, confidence)]
     #y_true is relative to the whole image, and so is anchor
-    object_scale = 5
-    coordinates_scale = 1
-    no_object_scale = 2
+    object_scale = 5.0
+    coordinates_scale = 1.0
+    no_object_scale = 1.0
     #pred_xy is ratio to a single cell
     pred_xy, pred_wh = y_pred[..., 0:2], y_pred[..., 2:4]
     pred_xy = tf.sigmoid(pred_xy)

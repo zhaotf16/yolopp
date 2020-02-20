@@ -8,12 +8,11 @@ def augment(x, y):
     if flipType == 0:
         pass
     elif flipType == 1:
-        x, y = fliplr(x, y)
+        pass
     elif flipType == 2:
         pass
     elif flipType == 3:
         pass
-    return x, y
     #blurring
     blurType = np.random.randint(0, 3)
     if blurType == 0:

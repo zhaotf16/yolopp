@@ -33,9 +33,14 @@ def train(argv):
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
-    learning_rate = 0.0003
-    net = cn.PhosaurusNet()
+    learning_rate = 0.0001
+    #net = cn.PhosaurusNet()
+
+    #build and compile the model
+    net = cn.yolov2()
+    print(net.summary())
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
+    #net.compile(optimizer=optimizer, loss=cn.yolo_loss, run_eagerly=True)
 
     valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
@@ -50,8 +55,6 @@ def train(argv):
     valid_labels = valid_labels[20:30, ...]
     #debug#
     valid_frequency = 10
-    min_loss = 1000000
-    min_loss_epoch = -1
     for e in range(epochs):
         #shuffle
         index = [i for i in range(array.shape[0])]
@@ -71,7 +74,7 @@ def train(argv):
                 #wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_mean(no_obj_loss)
-                loss = xy_loss + obj_loss + no_obj_loss
+                loss = xy_loss + obj_loss + wh_loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
 
@@ -80,7 +83,6 @@ def train(argv):
         if (e+1) % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             picked, miss, wrong_picked = 0, 0, 0
-            # valid_xy_loss, valid_wh_loss, valid_obj_loss, valid_no_obj_loss = 0.0, 0.0, 0.0, 0.0
             for i in range(valid_num):
                 valid_data = np.expand_dims(valid[i, ...], axis=0)
                 valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
@@ -93,6 +95,8 @@ def train(argv):
                             wrong_picked += 1
                         elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
                             miss += 1
+            _, _, objLoss, _ = cn.yolo_loss(valid_pred, valid_true)
+            print(objLoss)
             print(
                 "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
                 (e+1, picked, miss, wrong_picked)
@@ -122,12 +126,6 @@ def train(argv):
 
             #print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
             #(e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
-            #record epoch where loss reaches minimum
-            #if valid_loss < min_loss:
-            #    min_loss = valid_loss
-            #    min_loss_epoch = e + 1
-
-    #print('min loss: %f in epoch: %d' % (min_loss, min_loss_epoch))
     net.save_weights('yolopp_weights/', save_format='tf')
 
     #debug:
