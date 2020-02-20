@@ -89,13 +89,13 @@ class PhosaurusNet(tf.keras.models.Model):
         self.conv18 = DarknetConv_BN_Leaky(1024, (3,3))
         self.conv19 = DarknetConv_BN_Leaky(1024, (3,3))
         self.conv20 = DarknetConv_BN_Leaky(1024, (3,3))
-        self.conv21 = DarknetConv_BN_Leaky(1024, (3,3))
+        self.conv21 = DarknetConv_BN_Leaky(256, (3,3))
         # Upsampling and concatenate
         self.upsample = tf.keras.layers.UpSampling2D(2)
         self.concatenate = tf.keras.layers.Concatenate()
         # Dropout and output
         self.dropout = tf.keras.layers.Dropout(0.2)
-        self.output = tf.keras.layers.Conv2D(5, (1,1))
+        self.conv22 = tf.keras.layers.Conv2D(5, (1,1))
  
     def call(self, input, training=False):
         # Layer 1
@@ -113,14 +113,15 @@ class PhosaurusNet(tf.keras.models.Model):
         x = self.conv6(x, training=training)
         x = self.conv7(x, training=training)
         x = self.conv8(x, training=training)
+        x = self.pool8(x)
         # Layer 9 - 13
         x = self.conv9(x, training=training)
         x = self.conv10(x, training=training)
         x = self.conv11(x, training=training)
         x = self.conv12(x, training=training)
         x = self.conv13(x, training=training)
-        x = self.pool13(x)
         y = x
+        x = self.pool13(x)
         # Layer 14 - 21
         x = self.conv14(x, training=training)
         x = self.conv15(x, training=training)
@@ -129,10 +130,11 @@ class PhosaurusNet(tf.keras.models.Model):
         x = self.conv18(x, training=training)
         x = self.conv19(x, training=training)
         x = self.conv20(x, training=training)
-        x = self.conv21(x, training=training)
+        y = self.conv21(x, training=training)
         x = self.upsample(x)
         x = self.concatenate([x, y])
         x = self.dropout(x)
+        x = self.conv22(x)
         return x
 
 def yolo_head(features):
