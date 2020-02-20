@@ -52,8 +52,10 @@ class PhosaurusNet(Darknet19):
         x = self.dropout(x, training=training)
         x = self.conv7(x, training=training)
         return x
+
 def space_to_depth_x2(x):
     return tf.nn.space_to_depth(x, block_size=2)
+
 def yolov2():
     x = inputs = tf.keras.Input(shape=(1024,1024,1))
     #Layer1
