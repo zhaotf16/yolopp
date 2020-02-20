@@ -66,7 +66,7 @@ def train(argv):
             index = i * batchsize
             x = np.copy(array[index:index+batchsize, ...])
             y_true = np.copy(label[index:index+batchsize, ...])
-            x, y_true = augmenter.augment(x, y_true)
+            #x, y_true = augmenter.augment(x, y_true)
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
                 xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)

@@ -1,7 +1,7 @@
 import tensorflow as tf
 from model.darknet import Darknet19, DarknetConv_BN_Leaky
-from tf.keras.layers import Reshape, Activation, Conv2D, Input, \
-    MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, LeakyReLU,
+from tensorflow.keras.layers import Reshape, Activation, Conv2D, Input, \
+    MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, LeakyReLU, \
     concatenate
 #Local settings
 gpus = tf.config.experimental.list_physical_devices(device_type='GPU')
@@ -52,7 +52,8 @@ class PhosaurusNet(Darknet19):
         x = self.dropout(x, training=training)
         x = self.conv7(x, training=training)
         return x
-
+def space_to_depth_x2(x):
+    return tf.nn.space_to_depth(x, block_size=2)
 def yolov2():
     x = inputs = tf.keras.Input(shape=(1024,1024,1))
     #Layer1
@@ -182,6 +183,7 @@ def yolov2():
     outputs = Conv2D(5, (1,1), strides=(1,1), padding='same', name='conv_23')(x)
     
     return tf.keras.models.Model(inputs, outputs)
+
 def yolo_head(features):
     #the output of cnn is (tx, ty, tw, th, confidence)
     #tx, ty are relative to a single cell, thus we use sigmoid() plus offset
