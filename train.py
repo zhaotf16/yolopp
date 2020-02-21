@@ -52,9 +52,11 @@ def train(argv):
 
     # data augmentation
     # average blurring
+    print('average blurring')
     average_blur_data = augmenter.averageBlur(array, (3,8))
     average_blur_label = np.copy(label)
     # gaussian blurring
+    print('gaussian blurring')
     gaussian_blur_data = augmenter.gaussianBlur(array, (0,3))
     gaussian_blur_label = np.copy(label)
     
@@ -62,6 +64,7 @@ def train(argv):
     label = np.concatenate((label, average_blur_label, gaussian_blur_label))
 
     # add noise
+    print('adding gaussian noise')
     noisy_data = augmenter.gaussianNoise(array)
     noisy_label = np.copy(label)
 
@@ -69,6 +72,7 @@ def train(argv):
     label = np.concatenate((label, noisy_label))
 
     # dropout
+    print('dropout')
     dropout_data = augmenter.dropout(array, 0.1)
     dropout_label = np.copy(label)
 
