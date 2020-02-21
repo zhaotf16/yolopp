@@ -112,10 +112,13 @@ def dropout(data, dropout_rate):
                     dst[k, i, j] = mean
     return dst
 
-def contrastNormalization(data):
+def contrastNormalization(data, factor=3.0):
     dst = np.copy(data)
     for i in range(dst.shape[0]):
-        dst[i] -= np.mean(dst[i])
+        mean = np.mean(dst[i])
+        dst[i] -= mean
+        dst[i] *= np.random.rand() * factor
+        dst[i] += mean
     return dst
 
 def gaussianNoise(data):
@@ -168,21 +171,3 @@ def flipud(data, label):
         dst_label[i,:,:,3] = np.flipud(dst_label[i,:,:,3])
         dst_label[i,:,:,4] = np.flipud(dst_label[i,:,:,4])
     return dst_data, dst_label
-
-if __name__ == '__main__':
-    data = np.random.rand(2,3,3,1)
-    label = np.random.rand(2,3,3,5)
-    print(data[0,:,:,:])
-    data1, label1 = fliplr(data, label)
-    print(label[0,:,:,0], label1[0,:,:,0])
-    data2, label2 = flipud(data, label)
-    print(label[0,:,:,1], label2[0,:,:,1])
-    #dst = contrastNormalization(data)
-    #print(dst)
-    #blur = averageBlur(data, (3,8))
-    #blur = gaussianBlur(data, (0,3))
-    #blur = dropout(data, dropout_rate=0.1)
-    #print(blur.shape)
-    #result = np.concatenate((data, blur))
-    #print(result.shape)
-    pass

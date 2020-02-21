@@ -35,9 +35,7 @@ def train(argv):
     epochs = FLAGS.epoch
     learning_rate = 0.0001
     net = cn.PhosaurusNet()
-    print(net.summary())
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
-
 
     valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
@@ -45,13 +43,47 @@ def train(argv):
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
-    #debug:
-    array = valid[0:10, ...]
-    label = valid_labels[0:10, ...]
+    # debug version
+    array = valid[0:20, ...]
+    label = valid_labels[0:20, ...]
     valid = valid[20:30, ...]
     valid_labels = valid_labels[20:30, ...]
-    #debug#
     valid_frequency = 10
+
+    # data augmentation
+    # average blurring
+    average_blur_data = augmenter.averageBlur(array, (3,8))
+    average_blur_label = np.copy(label)
+    # gaussian blurring
+    gaussian_blur_data = augmenter.gaussianBlur(array, (0,3))
+    gaussian_blur_label = np.copy(label)
+    
+    array = np.concatenate((array, average_blur_data, gaussian_blur_data))
+    label = np.concatenate((label, average_blur_label, gaussian_blur_label))
+
+    # add noise
+    noisy_data = augmenter.gaussianNoise(array)
+    noisy_label = np.copy(label)
+
+    array = np.concatenate((array, noisy_data))
+    label = np.concatenate((label, noisy_label))
+
+    # dropout
+    dropout_data = augmenter.dropout(array, 0.1)
+    dropout_label = np.copy(label)
+
+    array = np.concatenate((array, dropout_data))
+    label = np.concatenate((label, dropout_label))
+
+    # contrast normalization
+    #normalized_data = augmenter.contrastNormalization(array)
+    #normalized_label = augmenter.contrastNormalization()
+
+    #array = np.concatenate((array, normalized_data))
+    #label = np.concatenate((label, normalized_label))
+
+    print(array.shape)
+
     for e in range(epochs):
         #shuffle
         index = [i for i in range(array.shape[0])]
@@ -71,7 +103,7 @@ def train(argv):
                 #wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_mean(no_obj_loss)
-                loss = xy_loss + obj_loss + wh_loss
+                loss = xy_loss + obj_loss + no_obj_loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
 
@@ -115,46 +147,8 @@ def train(argv):
                 "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
                 (e+1, picked, miss, wrong_picked)
             )
-            #valid_xy_loss /= valid_num
-            #valid_wh_loss /= valid_num
-            #valid_obj_loss /= valid_num
-            #valid_no_obj_loss /= valid_num
-            #valid_loss = valid_xy_loss + valid_obj_loss + valid_no_obj_loss
-
-            #print("Validation: epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss: %f" %
-            #(e+1, valid_xy_loss, valid_obj_loss, valid_no_obj_loss, valid_loss))
     net.save_weights('yolopp_weights/', save_format='tf')
 
-    #debug:
-    '''
-    batchsize = 2
-    mrc = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
-    array = preprocess.mrc2array(mrc, image_size=1024)
-    batch_num = np.shape(array)[0] // batchsize
-    stars = []
-    for i in range(batch_num):
-        index = i * batchsize
-        x = array[index:index+batchsize, ...]
-        y_pred = net(x, training=False)
-        bbox, score = cn.yolo_head(y_pred)
-        for n in range(batchsize):
-            box_x1y1, box_x2y2 = tf.split(bbox[n,...], (2, 2), axis=-1)
-            #box_xy, _ = (box_x1y1 + box_x2y2) / 2, box_x2y2 - box_x1y1
-            confidence = tf.squeeze(score[n, ...], axis=-1)
-            confidence = tf.sigmoid(confidence)
-            #print(tf.shape(confidence))
-            w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
-            star = starHelper.StarData(str(i*batchsize+n), [])
-            for a in range(w):
-                for b in range(h):
-                    #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
-                    if confidence[a, b] > 0.3:
-                        star.content.append((
-                            (a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
-                        ))
-            stars.append(star)
-    starHelper.write_star(stars, "../dataset/yolopp")
-    '''
 if __name__ == '__main__':
     FLAGS = flags.FLAGS
     flags.DEFINE_string("data_path", None, "path of data(mrc, etc.)")
