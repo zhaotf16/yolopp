@@ -87,9 +87,8 @@ def main(argv):
             (1024 / 7420, 1024 / 7676)
         )
         downsampled_label.append(starHelper.StarData(name, content))
-    #data = normalize(data)
+
     mrcHelper.write_mrc(data, dst=data_dst)
-    #starHelper.write_star(label, dst=label_dst)
     starHelper.write_star(downsampled_label, dst=label_dst)
     
 if __name__ == '__main__':
