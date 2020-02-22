@@ -43,6 +43,7 @@ def train(argv):
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
+    preprocess.normalize_uint8(valid)
     # debug version
     array = valid[0:20, ...]
     label = valid_labels[0:20, ...]
@@ -70,24 +71,24 @@ def train(argv):
 
     array = np.concatenate((array, noisy_data))
     label = np.concatenate((label, noisy_label))
-
+    
     # dropout
-    print('dropout')
-    dropout_data = augmenter.dropout(array, 0.1)
-    dropout_label = np.copy(label)
+    #print('dropout')
+    #dropout_data = augmenter.dropout(array, 0.1)
+    #dropout_label = np.copy(label)
 
-    array = np.concatenate((array, dropout_data))
-    label = np.concatenate((label, dropout_label))
+    ##array = np.concatenate((array, dropout_data))
+    #label = np.concatenate((label, dropout_label))
 
     # contrast normalization
-    #normalized_data = augmenter.contrastNormalization(array)
-    #normalized_label = augmenter.contrastNormalization()
+    normalized_data = augmenter.contrastNormalization(array)
+    normalized_label = np.copy(label)
 
-    #array = np.concatenate((array, normalized_data))
-    #label = np.concatenate((label, normalized_label))
+    array = np.concatenate((array, normalized_data))
+    label = np.concatenate((label, normalized_label))
 
     print(array.shape)
-
+    preprocess.normalize_uint8(array)
     for e in range(epochs):
         #shuffle
         index = [i for i in range(array.shape[0])]

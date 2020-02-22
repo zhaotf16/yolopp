@@ -94,7 +94,7 @@ def main(argv):
 def normalize_uint8(data):
     for i in range(np.shape(data)[0]):
         maximum, minimum = np.max(data[i,...]), np.min(data[i,...])
-        data[i, ...] = (data[i, ...] - minimum) * 255 / (maximum - minimum)
+        data[i, ...] = (data[i, ...] - minimum) * 255 / (maximum - minimum) + 0.5
         data[i, ...] = max(data[i, ...], np.zeros_like(data[i, ...]))
         data[i, ...] = min(data[i, ...], 255 * np.ones_like(data[i, ...]))
     data = data.astype(np.float32)    
