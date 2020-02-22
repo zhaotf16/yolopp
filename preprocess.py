@@ -90,7 +90,15 @@ def main(argv):
 
     mrcHelper.write_mrc(data, dst=data_dst)
     starHelper.write_star(downsampled_label, dst=label_dst)
-    
+
+def normalize_uint8(data):
+    for i in range(np.shape(data)[0]):
+        maximum, minimum = np.max(data[i,...]), np.min(data[i,...])
+        data[i, ...] = (data[i, ...] - minimum) * 255 / (maximum - minimum)
+        data[i, ...] = max(data[i, ...], np.zeros_like(data[i, ...]))
+        data[i, ...] = min(data[i, ...], 255 * np.ones_like(data[i, ...]))
+    data = data.astype(np.float32)    
+
 if __name__ == '__main__':
     #This is a test on eml1/user/ztf
     FLAGS = flags.FLAGS
