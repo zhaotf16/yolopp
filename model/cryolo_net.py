@@ -133,7 +133,8 @@ class PhosaurusNet(tf.keras.models.Model):
         y = self.conv21(y, training=training)
         x = self.upsample(x)
         x = self.concatenate([x, y])
-        x = self.dropout(x)
+        if training:
+            x = self.dropout(x)
         x = self.conv22(x)
         return x
 
