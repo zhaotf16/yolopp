@@ -104,17 +104,21 @@ def train(argv):
             x, y_true = augmenter.augment(x, y_true)
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
-                xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
-                xy_loss = tf.reduce_mean(xy_loss)
+                #xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
+                obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
+                #xy_loss = tf.reduce_mean(xy_loss)
                 #wh_loss = tf.reduce_mean(wh_loss)
                 obj_loss = tf.reduce_mean(obj_loss)
                 no_obj_loss = tf.reduce_mean(no_obj_loss)
-                loss = xy_loss + obj_loss + no_obj_loss
+                #loss = xy_loss + obj_loss + no_obj_loss
+                loss = obj_loss + no_obj_loss
             grads = tape.gradient(loss, net.trainable_variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, net.trainable_variables))
 
-        print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss:%f" % 
-            (e+1, xy_loss, obj_loss, no_obj_loss, loss))
+        #print("epoch: %d\txy_loss: %f\tobj_loss: %f\tno_obj_loss:%f\tloss:%f" % 
+        #    (e+1, xy_loss, obj_loss, no_obj_loss, loss))
+        print("epoch: %d\tobj_loss: %f\tno_obj_loss:%f\tloss:%f" % 
+            (e+1, obj_loss, no_obj_loss, loss))
         if (e+1) % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             picked, miss, wrong_picked = 0, 0, 0
@@ -124,14 +128,17 @@ def train(argv):
                 valid_pred = net(valid_data, training=False)
                 for x in range(64):
                     for y in range(64):
-                        if tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 1.0:
+                        #if tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 1.0:
+                        if tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 1.0:
                             picked += 1
-                        elif tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 0:
+                        #elif tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 0:
+                        elif tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 0:
                             wrong_picked += 1
-                        elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
+                        #elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
+                        elif tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 0:
                             miss += 1
-            _, _, objLoss, _ = cn.yolo_loss(valid_pred, valid_true)
-            print(objLoss)
+                #_, _, objLoss, _  = cn.yolo_loss(valid_pred, valid_true)
+                print(objLoss)
             print(
                 "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
                 (e+1, picked, miss, wrong_picked)
@@ -143,11 +150,14 @@ def train(argv):
                 pred = net(data, training=False)
                 for x in range(64):
                     for y in range(64):
-                        if tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 1.0:
+                        #if tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 1.0:
+                        if tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 1.0:
                             picked += 1
-                        elif tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 0:
+                        #elif tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 0:
+                        elif tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 0:
                             wrong_picked += 1
-                        elif tf.sigmoid(pred[0,x,y,4]) < 0.5 and true[0,x,y,4] == 1.0:
+                        #elif tf.sigmoid(pred[0,x,y,4]) < 0.5 and true[0,x,y,4] == 1.0:
+                        elif tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 0:
                             miss += 1
             print(
                 "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %

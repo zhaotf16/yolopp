@@ -252,9 +252,11 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     #return xy_loss + wh_loss + obj_loss
     '''
     y_pred = tf.sigmoid(y_pred)
+    mask = tf.squeeze(y_true, axis=-1)
     obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
-    obj_loss = tf.reduce_sum(obj_loss, axis=(1,2))
-    return obj_loss
+    no_obj_loss = no_object_scale * obj_loss * (1 - mask)
+    obj_loss = object_scale * mask * tf.reduce_sum(obj_loss, axis=(1,2))
+    return obj_loss, no_obj_loss
 def non_max_suppression(boxes, scores, iou_threshold):
     '''
     Now the network cannot work    
