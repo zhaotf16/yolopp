@@ -95,7 +95,8 @@ class PhosaurusNet(tf.keras.models.Model):
         self.concatenate = tf.keras.layers.Concatenate()
         # Dropout and output
         self.dropout = tf.keras.layers.Dropout(0.2)
-        self.conv22 = tf.keras.layers.Conv2D(5, (1,1))
+        #self.conv22 = tf.keras.layers.Conv2D(5, (1,1))
+        self.conv22 = tf.keras.layers.Conv2D(1, (1,1))
  
     def call(self, input, training=False):
         # Layer 1
@@ -201,6 +202,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     coordinates_scale = 1.0
     no_object_scale = 1.0
     #pred_xy is ratio to a single cell
+    '''
     pred_xy, pred_wh = y_pred[..., 0:2], y_pred[..., 2:4]
     pred_xy = tf.sigmoid(pred_xy)
     #box_xy and true_xy are ratio the whole meshgrid and input_image
@@ -209,7 +211,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     true_x1y1 = true_xy - true_wh / 2
     true_x2y2 = true_xy + true_wh / 2
     true_box = tf.concat((true_x1y1, true_x2y2), axis=-1)
-
+    
     grid_size = tf.shape(y_true)[1]
     meshgrid = tf.meshgrid(tf.range(grid_size), tf.range(grid_size))
     grid, coord = meshgrid[0], meshgrid[1]
@@ -248,7 +250,11 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     #debug:
     return xy_loss, wh_loss, obj_loss, no_obj_loss
     #return xy_loss + wh_loss + obj_loss
-
+    '''
+    y_pred = tf.sigmoid(y_pred)
+    obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
+    obj_loss = tf.reduce_sum(obj_loss, axis=(1,2))
+    return obj_loss
 def non_max_suppression(boxes, scores, iou_threshold):
     '''
     Now the network cannot work    

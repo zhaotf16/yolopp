@@ -38,7 +38,8 @@ def downsample(inputs, use_factor=False, para1=None, para2=None):
     return inputs
 
 def star2label(inputs, image_size, grid_size=64, particle_size=220):
-    #inputs is a list of StarData
+    #inputs is a list of 
+    '''
     label = np.zeros(
         (len(inputs), grid_size, grid_size, 5), 
         dtype=np.float32
@@ -53,6 +54,17 @@ def star2label(inputs, image_size, grid_size=64, particle_size=220):
             label[i, x_index, y_index, 2] = particle_size[0] / image_size
             label[i, x_index, y_index, 3] = particle_size[1] / image_size
             label[i, x_index, y_index, 4] = 1.0
+    '''
+    label = np.zeros(
+        (len(inputs), grid_size, grid_size, 1),
+        dtype = np.float32
+    )
+    grid_scale = image_size // grid_size
+    for i in range(len(inputs)):
+        for coord in inputs[i].content:
+            x = int(coord[0] - 1) // grid_size
+            y = int(coord[1] - 1) // grid_size
+            label[i, x, y, 0] = 1.0
     return label
 
 def mrc2array(inputs, image_size):
