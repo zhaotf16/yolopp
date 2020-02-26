@@ -258,6 +258,12 @@ class MrcData():
         self.header = header
         self.label = label
 
+def quantitize(data):
+    mi, ma = np.min(data), np.max(data)
+    r = ma - mi
+    data = (data - mi) / r * 255
+    return data
+
 def load_mrc_file(path):
     if not os.path.isdir(path):
         print(path, " is not a valid directory")
@@ -272,6 +278,7 @@ def load_mrc_file(path):
             with open(path+file, "rb") as f:
                 content = f.read()
             data, header, _ = parse(content=content)
+            data = quantitize(data)
             name, _ = os.path.splitext(file)
             # TODO: load and process label according to STAR or EMAN
             mrc_data.append(MrcData(name=name, header=header, data=data, label=""))
