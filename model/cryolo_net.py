@@ -94,7 +94,7 @@ class PhosaurusNet(tf.keras.models.Model):
         self.upsample = tf.keras.layers.UpSampling2D(2)
         self.concatenate = tf.keras.layers.Concatenate()
         # Dropout and output
-        self.dropout = tf.keras.layers.Dropout(0.2)
+        self.dropout = tf.keras.layers.Dropout(0.5)
         #self.conv22 = tf.keras.layers.Conv2D(5, (1,1))
         self.conv22 = tf.keras.layers.Conv2D(1, (1,1))
  
@@ -251,7 +251,7 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     return xy_loss, wh_loss, obj_loss, no_obj_loss
     #return xy_loss + wh_loss + obj_loss
     '''
-    #y_pred = tf.sigmoid(y_pred)
+    y_pred = tf.sigmoid(y_pred)
     mask = tf.squeeze(y_true, axis=-1)
     obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
     no_obj_loss = no_object_scale * obj_loss * (1 - mask)

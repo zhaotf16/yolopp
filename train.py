@@ -91,17 +91,14 @@ def train(argv):
                 valid_data = np.expand_dims(valid[i, ...], axis=0)
                 valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
                 valid_pred = net(valid_data, training=False)
+                valid_pred = tf.sigmoid(valid_pred)
+                print(tf.reduce_max(valid_pred))
                 for x in range(64):
                     for y in range(64):
-                        #if tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 1.0:
-                        #if tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 1.0:
                         if valid_pred[0,x,y,0] > 0.5 and valid_true[0,x,y,0] == 1.0:    
                             picked += 1
-                        #elif tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 0:
-                        #elif tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 0:
                         elif valid_pred[0,x,y,0] > 0.5 and valid_true[0,x,y,0] == 0:
                             wrong_picked += 1
-                        #elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
                         elif valid_pred[0,x,y,0] < 0.5 and valid_true[0,x,y,0] == 1.0:
                             miss += 1
                 #_, _, objLoss, _  = cn.yolo_loss(valid_pred, valid_true)
@@ -116,18 +113,14 @@ def train(argv):
                 data = np.expand_dims(array[i, ...], axis=0)
                 true = np.expand_dims(label[i, ...], axis=0)
                 pred = net(data, training=False)
+                pred = tf.sigmoid(tf)
+                print(tf.reduce_max(pred))
                 for x in range(64):
                     for y in range(64):
-                        #if tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 1.0:
-                        #if tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 1.0:
                         if pred[0,x,y,0] > 0.5 and true[0,x,y,0] == 1.0:
                             picked += 1
-                        #elif tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 0:
-                        #elif tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 0:
                         elif pred[0,x,y,0] > 0.5 and true[0,x,y,0] == 0:
                             wrong_picked += 1
-                        #elif tf.sigmoid(pred[0,x,y,4]) < 0.5 and true[0,x,y,4] == 1.0:
-                        #elif tf.sigmoid(pred[0,x,y,0]) < 0.5 and true[0,x,y,0] == 0:
                         elif pred[0,x,y,0] < 0.5 and true[0,x,y,0] == 1.0:
                             miss += 1
             print(
