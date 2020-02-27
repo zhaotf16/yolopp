@@ -33,7 +33,9 @@ def train(argv):
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
-    learning_rate = 0.0001
+    learning_rate = 0.001
+    decay = 0.95
+    decay_frequency = 20
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
@@ -43,53 +45,14 @@ def train(argv):
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
-    #preprocess.normalize_uint8(valid)
+
     # debug version
     array = valid[0:10, ...]
     label = valid_labels[0:10, ...]
     valid = valid[20:30, ...]
     valid_labels = valid_labels[20:30, ...]
     valid_frequency = 10
-    '''
-    # data augmentation
-    # average blurring
-    print('average blurring')
-    average_blur_data = augmenter.averageBlur(array, (3,8))
-    average_blur_label = np.copy(label)
-    # gaussian blurring
-    print('gaussian blurring')
-    gaussian_blur_data = augmenter.gaussianBlur(array, (0,3))
-    gaussian_blur_label = np.copy(label)
     
-    array = np.concatenate((array, average_blur_data, gaussian_blur_data))
-    label = np.concatenate((label, average_blur_label, gaussian_blur_label))
-
-    # add noise
-    print('adding gaussian noise')
-    noisy_data = augmenter.gaussianNoise(array)
-    noisy_label = np.copy(label)
-
-    array = np.concatenate((array, noisy_data))
-    label = np.concatenate((label, noisy_label))
-    
-    # dropout
-    #print('dropout')
-    #dropout_data = augmenter.dropout(array, 0.1)
-    #dropout_label = np.copy(label)
-
-    ##array = np.concatenate((array, dropout_data))
-    #label = np.concatenate((label, dropout_label))
-
-    # contrast normalization
-    normalized_data = augmenter.contrastNormalization(array)
-    normalized_label = np.copy(label)
-
-    array = np.concatenate((array, normalized_data))
-    label = np.concatenate((label, normalized_label))
-
-    print(array.shape)
-    '''
-   # preprocess.normalize_uint8(array)
     for e in range(epochs):
         #shuffle
         index = [i for i in range(array.shape[0])]
@@ -119,6 +82,8 @@ def train(argv):
         #    (e+1, xy_loss, obj_loss, no_obj_loss, loss))
         print("epoch: %d\tobj_loss: %f\tno_obj_loss:%f\tloss:%f" % 
             (e+1, obj_loss, no_obj_loss, loss))
+        if (e+1) % decay_frequency == 0:
+            learning_rate *= decay
         if (e+1) % valid_frequency == 0:
             valid_num = np.shape(valid)[0]
             picked, miss, wrong_picked = 0, 0, 0
@@ -129,16 +94,19 @@ def train(argv):
                 for x in range(64):
                     for y in range(64):
                         #if tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 1.0:
-                        if tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 1.0:
+                        #if tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 1.0:
+                        if valid_pred[0,x,y,0] > 0.5 and valid_true[0,x,y,0] == 1.0:    
                             picked += 1
                         #elif tf.sigmoid(valid_pred[0,x,y,4]) > 0.5 and valid_true[0,x,y,4] == 0:
-                        elif tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 0:
+                        #elif tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 0:
+                        elif valid_pred[0,x,y,0] > 0.5 and valid_true[0,x,y,0] == 0:
                             wrong_picked += 1
                         #elif tf.sigmoid(valid_pred[0,x,y,4]) < 0.5 and valid_true[0,x,y,4] == 1.0:
-                        elif tf.sigmoid(valid_pred[0,x,y,0]) > 0.5 and valid_true[0,x,y,0] == 0:
+                        elif valid_pred[0,x,y,0] < 0.5 and valid_true[0,x,y,0] == 1.0:
                             miss += 1
                 #_, _, objLoss, _  = cn.yolo_loss(valid_pred, valid_true)
-                print(objLoss)
+                objLoss, noObjLoss = cn.yolo_loss(valid_pred, valid_true)
+                print(objLoss + noObjLoss)
             print(
                 "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
                 (e+1, picked, miss, wrong_picked)
@@ -151,13 +119,16 @@ def train(argv):
                 for x in range(64):
                     for y in range(64):
                         #if tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 1.0:
-                        if tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 1.0:
+                        #if tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 1.0:
+                        if pred[0,x,y,0] > 0.5 and true[0,x,y,0] == 1.0:
                             picked += 1
                         #elif tf.sigmoid(pred[0,x,y,4]) > 0.5 and true[0,x,y,4] == 0:
-                        elif tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 0:
+                        #elif tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 0:
+                        elif pred[0,x,y,0] > 0.5 and true[0,x,y,0] == 0:
                             wrong_picked += 1
                         #elif tf.sigmoid(pred[0,x,y,4]) < 0.5 and true[0,x,y,4] == 1.0:
-                        elif tf.sigmoid(pred[0,x,y,0]) > 0.5 and true[0,x,y,0] == 0:
+                        #elif tf.sigmoid(pred[0,x,y,0]) < 0.5 and true[0,x,y,0] == 0:
+                        elif pred[0,x,y,0] < 0.5 and true[0,x,y,0] == 1.0:
                             miss += 1
             print(
                 "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
