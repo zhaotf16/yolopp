@@ -45,7 +45,10 @@ def train(argv):
     valid_labels = preprocess.star2label(valid_labels, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
-
+    
+    # label blurring
+    print('label blurring ...')
+    valid_labels = augmenter.gaussianBlur(valid_labels)
     # debug version
     array = valid[0:10, ...]
     label = valid_labels[0:10, ...]
