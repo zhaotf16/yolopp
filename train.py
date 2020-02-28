@@ -26,8 +26,8 @@ def train(argv):
     #mrc = mrcHelper.load_mrc_file(data_path)
     #star = starHelper.read_all_star(label_path)
     
-    #array = preprocess.mrc2array(mrc, image_size=1024)
-    #label = preprocess.star2label(star, 1024, grid_size=64, 
+    #train_data = preprocess.mrc2array(mrc, image_size=1024)
+    #train_label = preprocess.star2label(star, 1024, grid_size=64, 
     #    particle_size=(220/7420*1024, 220/7676*1024),
     #)
 
@@ -39,36 +39,34 @@ def train(argv):
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
-    valid = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
-    valid_labels = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
-    valid = preprocess.mrc2array(valid, image_size=1024)
-    valid_labels = preprocess.star2label(valid_labels, 1024, 64,
+    data = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
+    label = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
+    data = preprocess.mrc2array(data, image_size=1024)
+    label = preprocess.star2label(label, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
     
-    # label blurring
-    print('label blurring ...')
-    valid_labels = augmenter.gaussianBlur(valid_labels, (1,2))
-    valid_labels = tf.where(valid_labels > 1.0, tf.ones_like(valid_labels), valid_labels)
-    valid_labels = tf.where(valid_labels < 0.0, tf.zeros_like(valid_labels), valid_labels)
+    # train_label blurring
+    print('train_label blurring ...')
+    
     # debug version
-    array = valid[0:10, ...]
-    label = valid_labels[0:10, ...]
-    valid = valid[20:30, ...]
-    valid_labels = valid_labels[20:30, ...]
+    train_data = data[0:10, ...]
+    train_label = label[0:10, ...]
+    valid_data = data[20:30, ...]
+    valid_label = label[20:30, ...]
     valid_frequency = 10
     
     for e in range(epochs):
         #shuffle
-        index = [i for i in range(array.shape[0])]
+        index = [i for i in range(train_data.shape[0])]
         np.random.shuffle(index)
-        array = array[index, ...]
-        label = label[index, ...]
-        batch_num = np.shape(array)[0] // batchsize
+        train_data = train_data[index, ...]
+        train_label = train_label[index, ...]
+        batch_num = np.shape(train_data)[0] // batchsize
         for i in range(batch_num):
             index = i * batchsize
-            x = np.copy(array[index:index+batchsize, ...])
-            y_true = np.copy(label[index:index+batchsize, ...])
+            x = np.copy(train_data[index:index+batchsize, ...])
+            y_true = np.copy(train_label[index:index+batchsize, ...])
             x, y_true = augmenter.augment(x, y_true)
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
@@ -90,33 +88,33 @@ def train(argv):
         if (e+1) % decay_frequency == 0:
             learning_rate *= decay
         if (e+1) % valid_frequency == 0:
-            valid_num = np.shape(valid)[0]
+            valid_num = np.shape(valid_data)[0]
             picked, miss, wrong_picked = 0, 0, 0
             for i in range(valid_num):
-                valid_data = np.expand_dims(valid[i, ...], axis=0)
-                valid_true = np.expand_dims(valid_labels[i, ...], axis=0)
-                valid_pred = net(valid_data, training=False)
-                valid_pred = tf.sigmoid(valid_pred)
-                print(tf.reduce_max(valid_pred))
+                x = np.expand_dims(valid_data[i, ...], axis=0)
+                y_true = np.expand_dims(valid_label[i, ...], axis=0)
+                y_pred = net(valid_data, training=False)
+                y_pred = tf.sigmoid(y_pred)
+                print(tf.reduce_max(y_pred))
                 for x in range(64):
                     for y in range(64):
-                        if valid_pred[0,x,y,0] > 0.5 and valid_true[0,x,y,0] == 1.0:    
+                        if y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] == 1.0:    
                             picked += 1
-                        elif valid_pred[0,x,y,0] > 0.5 and valid_true[0,x,y,0] == 0:
+                        elif y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] == 0:
                             wrong_picked += 1
-                        elif valid_pred[0,x,y,0] < 0.5 and valid_true[0,x,y,0] == 1.0:
+                        elif y_pred[0,x,y,0] < 0.5 and y_true[0,x,y,0] == 1.0:
                             miss += 1
-                #_, _, objLoss, _  = cn.yolo_loss(valid_pred, valid_true)
-                objLoss, noObjLoss = cn.yolo_loss(valid_pred, valid_true)
+                #_, _, objLoss, _  = cn.yolo_loss(y_pred, y_true)
+                objLoss, noObjLoss = cn.yolo_loss(y_pred, y_true)
                 print(objLoss + noObjLoss)
             print(
                 "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
                 (e+1, picked, miss, wrong_picked)
             )
             picked, miss, wrong_picked = 0, 0, 0
-            for i in range(np.shape(array)[0]):
-                data = np.expand_dims(array[i, ...], axis=0)
-                true = np.expand_dims(label[i, ...], axis=0)
+            for i in range(np.shape(train_data)[0]):
+                x = np.expand_dims(train_data[i, ...], axis=0)
+                y_true = np.expand_dims(train_label[i, ...], axis=0)
                 pred = net(data, training=False)
                 pred = tf.sigmoid(pred)
                 print(tf.reduce_max(pred))
