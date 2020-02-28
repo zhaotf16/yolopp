@@ -253,8 +253,10 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     '''
     y_pred = tf.sigmoid(y_pred)
     mask = tf.squeeze(y_true, axis=-1)
+    #ignore_mask = tf.where(mask<0.5, tf.ones_like(mask), tf.zeros_like(mask))
+    #mask = tf.where(mask>0.5, tf.ones_like(mask), tf.zeros_like(mask))
     obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
-    no_obj_loss = no_object_scale * obj_loss * (1 - mask)
+    no_obj_loss = no_object_scale * obj_loss# * ignore_mask
     obj_loss = object_scale * mask * obj_loss
     obj_loss = tf.reduce_sum(obj_loss, axis=(1,2))
     no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1,2))

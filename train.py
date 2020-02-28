@@ -48,7 +48,9 @@ def train(argv):
     
     # label blurring
     print('label blurring ...')
-    valid_labels = augmenter.gaussianBlur(valid_labels)
+    valid_labels = augmenter.gaussianBlur(valid_labels, (1,2))
+    valid_labels = tf.where(valid_labels > 1.0, tf.ones_like(valid_labels), valid_labels)
+    valid_labels = tf.where(valid_labels < 0.0, tf.zeros_like(valid_labels), valid_labels)
     # debug version
     array = valid[0:10, ...]
     label = valid_labels[0:10, ...]
@@ -116,7 +118,7 @@ def train(argv):
                 data = np.expand_dims(array[i, ...], axis=0)
                 true = np.expand_dims(label[i, ...], axis=0)
                 pred = net(data, training=False)
-                pred = tf.sigmoid(tf)
+                pred = tf.sigmoid(pred)
                 print(tf.reduce_max(pred))
                 for x in range(64):
                     for y in range(64):
