@@ -48,7 +48,9 @@ def train(argv):
     
     # train_label blurring
     print('train_label blurring ...')
-    
+    epi = 0.1
+    K = 5
+    label = label * (1 - epi) + epi / K
     # debug version
     train_data = data[0:10, ...]
     train_label = label[0:10, ...]
@@ -93,7 +95,7 @@ def train(argv):
             for i in range(valid_num):
                 x = np.expand_dims(valid_data[i, ...], axis=0)
                 y_true = np.expand_dims(valid_label[i, ...], axis=0)
-                y_pred = net(valid_data, training=False)
+                y_pred = net(x, training=False)
                 y_pred = tf.sigmoid(y_pred)
                 print(tf.reduce_max(y_pred))
                 for x in range(64):
@@ -114,8 +116,8 @@ def train(argv):
             picked, miss, wrong_picked = 0, 0, 0
             for i in range(np.shape(train_data)[0]):
                 x = np.expand_dims(train_data[i, ...], axis=0)
-                y_true = np.expand_dims(train_label[i, ...], axis=0)
-                pred = net(data, training=False)
+                true = np.expand_dims(train_label[i, ...], axis=0)
+                pred = net(x, training=False)
                 pred = tf.sigmoid(pred)
                 print(tf.reduce_max(pred))
                 for x in range(64):

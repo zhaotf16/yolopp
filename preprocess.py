@@ -62,8 +62,8 @@ def star2label(inputs, image_size, grid_size=64, particle_size=220):
     grid_scale = image_size // grid_size
     for i in range(len(inputs)):
         for coord in inputs[i].content:
-            x = int(coord[0] - 1) // grid_size
-            y = int(coord[1] - 1) // grid_size
+            x = int(coord[0] - 1) // grid_scale
+            y = int(coord[1] - 1) // grid_scale
             label[i, x, y, 0] = 1.0
     return label
 
