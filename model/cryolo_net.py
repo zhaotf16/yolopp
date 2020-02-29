@@ -261,8 +261,8 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     obj_loss = tf.keras.losses.binary_crossentropy(y_true, y_pred)
     no_obj_loss = no_object_scale * obj_loss * no_obj_mask
     obj_loss = object_scale * obj_mask * obj_loss
-    obj_loss = tf.reduce_sum(obj_loss, axis=(1,2,3))
-    no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1,2,3))
+    obj_loss = tf.reduce_sum(obj_loss, axis=(1,2))
+    no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1,2))
     return obj_loss, no_obj_loss
 def non_max_suppression(boxes, scores, iou_threshold):
     '''
