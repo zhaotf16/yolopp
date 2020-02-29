@@ -98,6 +98,7 @@ def train(argv):
                 y_pred = net(x, training=False)
                 y_pred = tf.sigmoid(y_pred)
                 print(tf.reduce_max(y_pred))
+                print(tf.reduce_min(y_pred))
                 for x in range(64):
                     for y in range(64):
                         if y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] > 0.5:    

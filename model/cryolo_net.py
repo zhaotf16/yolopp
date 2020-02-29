@@ -253,11 +253,16 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     '''
     y_pred = tf.sigmoid(y_pred)
     mask = tf.squeeze(y_true, axis=-1)
-    obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
-    no_obj_loss = no_object_scale * obj_loss# * ignore_mask
-    obj_loss = object_scale * mask * obj_loss
-    obj_loss = tf.reduce_sum(obj_loss, axis=(1,2))
-    no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1,2))
+    obj_mask = tf.where(mask>0.5, tf.ones_like(mask), tf.zeros_like(mask))
+    no_obj_mask = tf.where(mask<0.5, tf.ones_like(mask), tf.zeros_like(mask))
+    obj_mask = tf.cast(obj_mask, tf.float32)
+    no_obj_mask = tf.cast(no_obj_mask, tf.float32)
+    #obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
+    obj_loss = tf.keras.losses.binary_crossentropy(y_true, y_pred)
+    no_obj_loss = no_object_scale * obj_loss * no_obj_mask
+    obj_loss = object_scale * obj_mask * obj_loss
+    obj_loss = tf.reduce_sum(obj_loss, axis=(1,2,3))
+    no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1,2,3))
     return obj_loss, no_obj_loss
 def non_max_suppression(boxes, scores, iou_threshold):
     '''
