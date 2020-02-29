@@ -100,11 +100,11 @@ def train(argv):
                 print(tf.reduce_max(y_pred))
                 for x in range(64):
                     for y in range(64):
-                        if y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] == 1.0:    
+                        if y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] > 0.5:    
                             picked += 1
-                        elif y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] == 0:
+                        elif y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] < 0.5:
                             wrong_picked += 1
-                        elif y_pred[0,x,y,0] < 0.5 and y_true[0,x,y,0] == 1.0:
+                        elif y_pred[0,x,y,0] < 0.5 and y_true[0,x,y,0] > 0.5:
                             miss += 1
                 #_, _, objLoss, _  = cn.yolo_loss(y_pred, y_true)
                 objLoss, noObjLoss = cn.yolo_loss(y_pred, y_true)
@@ -122,11 +122,11 @@ def train(argv):
                 print(tf.reduce_max(pred))
                 for x in range(64):
                     for y in range(64):
-                        if pred[0,x,y,0] > 0.5 and true[0,x,y,0] == 1.0:
+                        if pred[0,x,y,0] > 0.5 and true[0,x,y,0] > 0.5:
                             picked += 1
-                        elif pred[0,x,y,0] > 0.5 and true[0,x,y,0] == 0:
+                        elif pred[0,x,y,0] > 0.5 and true[0,x,y,0] < 0.5:
                             wrong_picked += 1
-                        elif pred[0,x,y,0] < 0.5 and true[0,x,y,0] == 1.0:
+                        elif pred[0,x,y,0] < 0.5 and true[0,x,y,0] > 0.5:
                             miss += 1
             print(
                 "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
