@@ -42,7 +42,7 @@ def train(argv):
     data = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     label = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
     data = preprocess.mrc2array(data, image_size=1024)
-    label = preprocess.star2label(label, 1024, 64,
+    label = preprocess.star2label(label, 1024, 128,
         (220/7420*1024, 220/7676*1024)
     )
     

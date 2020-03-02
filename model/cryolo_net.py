@@ -8,48 +8,7 @@ tf.config.experimental.set_virtual_device_configuration(
     gpus[-1],
     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)]
 )
-#anchor = tf.constant([[80., 80.]], dtype=tf.float32) / 1024
-'''
-class PhosaurusNet(Darknet19):
-    def __init__(self):
-        super().__init__()
-        self.additional_conv1 = DarknetConv_BN_Leaky(
-            filters=1024,
-            kernel_size=3,
-            strides=1
-        )
-        self.additional_conv2 = DarknetConv_BN_Leaky(
-            filters=1024,
-            kernel_size=3,
-            strides=1
-        )
-        self.additional_conv3 = DarknetConv_BN_Leaky(
-            filters=256,
-            kernel_size=1,
-            strides=1
-        )
-        self.upsample = tf.keras.layers.UpSampling2D(2)
-        self.concatenate = tf.keras.layers.Concatenate()
-        self.dropout = tf.keras.layers.Dropout(rate=0.2)
 
-    @tf.function
-    def call(self, input, training=False):
-        x = self.conv1(input)
-        x = self.conv2(x, training=training)
-        x = self.conv3(x, training=training)
-        x = self.conv4(x, training=training)
-        x = self.conv5(x, training=training)
-        y = x
-        x = self.conv6(x, training=training)
-        x = self.additional_conv1(x, training=training)
-        x = self.additional_conv2(x, training=training)
-        x = self.upsample(x)
-        y = self.additional_conv3(y, training=training)
-        x = self.concatenate([x, y])
-        x = self.dropout(x, training=training)
-        x = self.conv7(x, training=training)
-        return x
-'''
 class PhosaurusNet(tf.keras.models.Model):
     def __init__(self):
         super().__init__()
@@ -114,6 +73,7 @@ class PhosaurusNet(tf.keras.models.Model):
         x = self.conv6(x, training=training)
         x = self.conv7(x, training=training)
         x = self.conv8(x, training=training)
+        y = x
         x = self.pool8(x)
         # Layer 9 - 13
         x = self.conv9(x, training=training)
@@ -121,7 +81,6 @@ class PhosaurusNet(tf.keras.models.Model):
         x = self.conv11(x, training=training)
         x = self.conv12(x, training=training)
         x = self.conv13(x, training=training)
-        y = x
         x = self.pool13(x)
         # Layer 14 - 21
         x = self.conv14(x, training=training)
@@ -253,14 +212,14 @@ def yolo_loss(y_pred, y_true, ignore_threshold=0.75):
     '''
     y_pred = tf.sigmoid(y_pred)
     mask = tf.squeeze(y_true, axis=-1)
-    obj_mask = tf.where(mask>0.5, tf.ones_like(mask), tf.zeros_like(mask))
-    no_obj_mask = tf.where(mask<0.5, tf.ones_like(mask), tf.zeros_like(mask))
-    obj_mask = tf.cast(obj_mask, tf.float32)
-    no_obj_mask = tf.cast(no_obj_mask, tf.float32)
-    #obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
-    obj_loss = tf.keras.losses.binary_crossentropy(y_true, y_pred)
-    no_obj_loss = no_object_scale * obj_loss * no_obj_mask
-    obj_loss = object_scale * obj_mask * obj_loss
+    #obj_mask = tf.where(mask>0.5, tf.ones_like(mask), tf.zeros_like(mask))
+    #no_obj_mask = tf.where(mask<0.5, tf.ones_like(mask), tf.zeros_like(mask))
+    #obj_mask = tf.cast(obj_mask, tf.float32)
+    #no_obj_mask = tf.cast(no_obj_mask, tf.float32)
+    obj_loss = tf.reduce_sum(tf.square(y_true - y_pred), axis=-1)
+    #obj_loss = tf.keras.losses.binary_crossentropy(y_true, y_pred)
+    no_obj_loss = no_object_scale * obj_loss * (1 - mask)
+    obj_loss = object_scale * mask * obj_loss
     obj_loss = tf.reduce_sum(obj_loss, axis=(1,2))
     no_obj_loss = tf.reduce_sum(no_obj_loss, axis=(1,2))
     return obj_loss, no_obj_loss
