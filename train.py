@@ -48,7 +48,7 @@ def train(argv):
     
     # train_label blurring
     print('train_label blurring ...')
-    epi = 0.1
+    epi = 0.0
     K = 5
     label = label * (1 - epi) + epi / K
     # debug version
@@ -121,6 +121,7 @@ def train(argv):
                 pred = net(x, training=False)
                 pred = tf.sigmoid(pred)
                 print(tf.reduce_max(pred))
+                print(tf.reduce_min(pred))
                 for x in range(64):
                     for y in range(64):
                         if pred[0,x,y,0] > 0.5 and true[0,x,y,0] > 0.5:
