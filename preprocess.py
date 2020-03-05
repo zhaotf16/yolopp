@@ -64,7 +64,7 @@ def star2label(inputs, image_size, grid_size=64, particle_size=220):
         for coord in inputs[i].content:
             x = int(coord[0] - 1) // grid_scale
             y = int(coord[1] - 1) // grid_scale
-            label[i, x, y, 0] = 1.0
+            label[i, y, x, 0] = 1.0
     return label
 
 def mrc2array(inputs, image_size):

@@ -48,10 +48,10 @@ def train(argv):
         (220/7420*1024, 220/7676*1024)
     )
     # debug version
-    train_data = data[0:10, ...]
-    train_label = label[0:10, ...]
-    valid_data = data[20:30, ...]
-    valid_label = label[20:30, ...]
+    train_data = data[0:20:2, ...]
+    train_label = label[0:20:2, ...]
+    valid_data = data[1:21:2, ...]
+    valid_label = label[1:21:2, ...]
     valid_frequency = 10
     
     for e in range(epochs):
@@ -87,13 +87,12 @@ def train(argv):
             learning_rate *= decay
         if (e+1) % valid_frequency == 0:
             valid_num = np.shape(valid_data)[0]
-            picked, miss, wrong_picked, background = 0, 0, 0, 0
             for i in range(valid_num):
+                picked, miss, wrong_picked, background = 0, 0, 0, 0
                 x = np.expand_dims(valid_data[i, ...], axis=0)
                 y_true = np.expand_dims(valid_label[i, ...], axis=0)
                 y_pred = net(x, training=False)
                 y_pred = tf.sigmoid(y_pred)
-                #print(tf.reduce_max(y_pred))
                 #print(tf.reduce_min(y_pred))
                 for x in range(64):
                     for y in range(64):
@@ -106,19 +105,25 @@ def train(argv):
                         else:
                             background += 1
                 #_, _, objLoss, _  = cn.yolo_loss(y_pred, y_true)
-                objLoss, noObjLoss = cn.yolo_loss(y_pred, y_true)
+                #objLoss, noObjLoss = cn.yolo_loss(y_pred, y_true)
                 #print(objLoss + noObjLoss)
-            print(
-                    "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
-                (e+1, picked, miss, wrong_picked, background)
-            )
-            picked, miss, wrong_picked, background = 0, 0, 0, 0
+                print(
+                        "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
+                    (e+1, picked, miss, wrong_picked, background)
+                )
             for i in range(np.shape(train_data)[0]):
+                picked, miss, wrong_picked, background = 0, 0, 0, 0
                 x = np.expand_dims(train_data[i, ...], axis=0)
                 true = np.expand_dims(train_label[i, ...], axis=0)
-                pred = net(x, training=False)
+                pred = net(x, training=True)
                 pred = tf.sigmoid(pred)
-                #print(tf.reduce_max(pred))
+                true = tf.where(true>0.0, tf.ones_like(true), tf.zeros_like(true))
+                true = tf.cast(true, tf.float32)
+                mask = tf.squeeze(true, axis=-1)
+                diff = tf.square(true-pred)
+                diff = tf.reduce_sum(diff,axis=-1)
+                diff = diff * mask
+                obj, no = cn.yolo_loss(pred, true)
                 #print(tf.reduce_min(pred))
                 for x in range(64):
                     for y in range(64):
@@ -130,10 +135,10 @@ def train(argv):
                             miss += 1
                         else:
                             background += 1
-            print(
-                    "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
-                (e+1, picked, miss, wrong_picked, background)
-            )
+                print(
+                        "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
+                    (e+1, picked, miss, wrong_picked, background)
+                )
     net.save_weights('yolopp_weights/', save_format='tf')
 
 if __name__ == '__main__':
