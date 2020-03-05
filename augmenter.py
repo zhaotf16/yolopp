@@ -132,17 +132,17 @@ def flip(data, label):
     dst_label = np.copy(label)
     for i in range(dst_data.shape[0]):
         dst_data[i] = np.fliplr(dst_data[i])
-        dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
-        dst_label[i,:,:,0] = np.flip(dst_label[i,:,:,0])
-        dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
-        dst_label[i,:,:,1] = np.flip(dst_label[i,:,:,1])
+        #dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
+        #dst_label[i,:,:,0] = np.flip(dst_label[i,:,:,0])
+        #dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
+        #dst_label[i,:,:,1] = np.flip(dst_label[i,:,:,1])
 
-        dst_label[i,:,:,2] = np.flip(dst_label[i,:,:,2])
-        dst_label[i,:,:,3] = np.flip(dst_label[i,:,:,3])
-        dst_label[i,:,:,4] = np.flip(dst_label[i,:,:,4])
+        #dst_label[i,:,:,2] = np.flip(dst_label[i,:,:,2])
+        #dst_label[i,:,:,3] = np.flip(dst_label[i,:,:,3])
+        dst_label[i,:,:,0] = np.flip(dst_label[i,:,:,4])
 
-        dst_label[i,:,:,0] *= dst_label[i,:,:,4]
-        dst_label[i,:,:,1] *= dst_label[i,:,:,4]
+        #dst_label[i,:,:,0] *= dst_label[i,:,:,4]
+        #dst_label[i,:,:,1] *= dst_label[i,:,:,4]
         
     return dst_data, dst_label
 
@@ -152,11 +152,11 @@ def fliplr(data, label):
     dst_label = np.copy(label)
     for i in range(dst_data.shape[0]):
         dst_data[i] = np.fliplr(dst_data[i])
-        dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
-        dst_label[i,:,:,0] = np.fliplr(dst_label[i,:,:,0])
-        dst_label[i,:,:,2] = np.fliplr(dst_label[i,:,:,2])
-        dst_label[i,:,:,3] = np.fliplr(dst_label[i,:,:,3])
-        dst_label[i,:,:,4] = np.fliplr(dst_label[i,:,:,4])
+        #dst_label[i,:,:,0] = 1.0 - dst_label[i,:,:,0]
+        #dst_label[i,:,:,0] = np.fliplr(dst_label[i,:,:,0])
+        #dst_label[i,:,:,2] = np.fliplr(dst_label[i,:,:,2])
+        #dst_label[i,:,:,3] = np.fliplr(dst_label[i,:,:,3])
+        dst_label[i,:,:,0] = np.fliplr(dst_label[i,:,:,4])
     return dst_data, dst_label
 
 #TODO: use vectorized operation to accelerate
@@ -165,9 +165,9 @@ def flipud(data, label):
     dst_label = np.copy(label)
     for i in range(dst_data.shape[0]):
         dst_data[i] = np.flipud(dst_data[i])
-        dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
-        dst_label[i,:,:,1] = np.flipud(dst_label[i,:,:,1])
-        dst_label[i,:,:,2] = np.flipud(dst_label[i,:,:,2])
-        dst_label[i,:,:,3] = np.flipud(dst_label[i,:,:,3])
-        dst_label[i,:,:,4] = np.flipud(dst_label[i,:,:,4])
+        #dst_label[i,:,:,1] = 1.0 - dst_label[i,:,:,1]
+        #dst_label[i,:,:,1] = np.flipud(dst_label[i,:,:,1])
+        #dst_label[i,:,:,2] = np.flipud(dst_label[i,:,:,2])
+        #dst_label[i,:,:,3] = np.flipud(dst_label[i,:,:,3])
+        dst_label[i,:,:,0] = np.flipud(dst_label[i,:,:,4])
     return dst_data, dst_label
