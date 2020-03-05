@@ -2,7 +2,7 @@ import os
 import numpy as np
 import struct
 from collections import namedtuple
-
+from PIL import Image
 #This file is copied from TopaZ:mrc.py and TopaZ:image.py
 #I add some extra functions to fit my task
 
@@ -282,6 +282,29 @@ def load_mrc_file(path):
             name, _ = os.path.splitext(file)
             # TODO: load and process label according to STAR or EMAN
             mrc_data.append(MrcData(name=name, header=header, data=data, label=""))
+    mrc_data.sort(key=lambda m: m.name)
+    return mrc_data
+
+def load_png_file(path):
+    if not os.path.isdir(path):
+        print(path, " is not a valid directory")
+        return
+    if not path.endswith('/'):
+        path += '/'
+
+    mrc_data = []
+    for file in os.listdir(path):
+        if file.endswith('.png'):
+            print("Loading %s ..." % (file))
+            im = Image.open(file)
+            data = np.array(im)
+            #with open(path+file, "rb") as f:
+            #    content = f.read()
+            #data, header, _ = parse(content=content)
+            #data = quantitize(data)
+            name, _ = os.path.splitext(file)
+            # TODO: load and process label according to STAR or EMAN
+            mrc_data.append(MrcData(name=name, header=None, data=data, label=""))
     mrc_data.sort(key=lambda m: m.name)
     return mrc_data
 

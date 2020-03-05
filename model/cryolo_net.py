@@ -73,7 +73,6 @@ class PhosaurusNet(tf.keras.models.Model):
         x = self.conv6(x, training=training)
         x = self.conv7(x, training=training)
         x = self.conv8(x, training=training)
-        y = x
         x = self.pool8(x)
         # Layer 9 - 13
         x = self.conv9(x, training=training)
@@ -81,6 +80,7 @@ class PhosaurusNet(tf.keras.models.Model):
         x = self.conv11(x, training=training)
         x = self.conv12(x, training=training)
         x = self.conv13(x, training=training)
+        y = x
         x = self.pool13(x)
         # Layer 14 - 21
         x = self.conv14(x, training=training)

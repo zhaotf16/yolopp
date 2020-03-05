@@ -9,6 +9,8 @@ import model.cryolo_net as cn
 from absl import app
 from absl import flags
 
+
+
 def train(argv):
     del argv
 
@@ -42,8 +44,8 @@ def train(argv):
     data = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
     label = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
     data = preprocess.mrc2array(data, image_size=1024)
-    label = preprocess.star2label(label, 1024, 128,
-        (220/7420*1024, 220/7676*1024)
+    label = preprocess.star2label(label, 2048, 128,
+        (220/7420*2048, 220/7676*2048)
     )
     
     # train_label blurring
