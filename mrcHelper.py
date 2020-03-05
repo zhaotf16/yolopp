@@ -296,7 +296,7 @@ def load_png_file(path):
     for file in os.listdir(path):
         if file.endswith('.png'):
             print("Loading %s ..." % (file))
-            im = Image.open(file)
+            im = Image.open(path+file)
             data = np.array(im)
             #with open(path+file, "rb") as f:
             #    content = f.read()

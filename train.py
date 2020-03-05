@@ -35,24 +35,18 @@ def train(argv):
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
-    learning_rate = 0.001
+    learning_rate = 0.0005
     decay = 0.95
     decay_frequency = 20
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
-    data = mrcHelper.load_mrc_file("../dataset/EMPIAR-10025/processed/micrographs")
+    data = mrcHelper.load_png_file("../mrc_sample_data")
     label = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
     data = preprocess.mrc2array(data, image_size=1024)
-    label = preprocess.star2label(label, 2048, 128,
-        (220/7420*2048, 220/7676*2048)
+    label = preprocess.star2label(label, 1024, 64,
+        (220/7420*1024, 220/7676*1024)
     )
-    
-    # train_label blurring
-    print('train_label blurring ...')
-    epi = 0.0
-    K = 5
-    label = label * (1 - epi) + epi / K
     # debug version
     train_data = data[0:10, ...]
     train_label = label[0:10, ...]
@@ -71,7 +65,7 @@ def train(argv):
             index = i * batchsize
             x = np.copy(train_data[index:index+batchsize, ...])
             y_true = np.copy(train_label[index:index+batchsize, ...])
-            x, y_true = augmenter.augment(x, y_true)
+            #x, y_true = augmenter.augment(x, y_true)
             with tf.GradientTape() as tape:
                 y_pred = net(x, training=True)
                 #xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
@@ -93,14 +87,14 @@ def train(argv):
             learning_rate *= decay
         if (e+1) % valid_frequency == 0:
             valid_num = np.shape(valid_data)[0]
-            picked, miss, wrong_picked = 0, 0, 0
+            picked, miss, wrong_picked, background = 0, 0, 0, 0
             for i in range(valid_num):
                 x = np.expand_dims(valid_data[i, ...], axis=0)
                 y_true = np.expand_dims(valid_label[i, ...], axis=0)
                 y_pred = net(x, training=False)
                 y_pred = tf.sigmoid(y_pred)
-                print(tf.reduce_max(y_pred))
-                print(tf.reduce_min(y_pred))
+                #print(tf.reduce_max(y_pred))
+                #print(tf.reduce_min(y_pred))
                 for x in range(64):
                     for y in range(64):
                         if y_pred[0,x,y,0] > 0.5 and y_true[0,x,y,0] > 0.5:    
@@ -109,21 +103,23 @@ def train(argv):
                             wrong_picked += 1
                         elif y_pred[0,x,y,0] < 0.5 and y_true[0,x,y,0] > 0.5:
                             miss += 1
+                        else:
+                            background += 1
                 #_, _, objLoss, _  = cn.yolo_loss(y_pred, y_true)
                 objLoss, noObjLoss = cn.yolo_loss(y_pred, y_true)
-                print(objLoss + noObjLoss)
+                #print(objLoss + noObjLoss)
             print(
-                "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
-                (e+1, picked, miss, wrong_picked)
+                    "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
+                (e+1, picked, miss, wrong_picked, background)
             )
-            picked, miss, wrong_picked = 0, 0, 0
+            picked, miss, wrong_picked, background = 0, 0, 0, 0
             for i in range(np.shape(train_data)[0]):
                 x = np.expand_dims(train_data[i, ...], axis=0)
                 true = np.expand_dims(train_label[i, ...], axis=0)
                 pred = net(x, training=False)
                 pred = tf.sigmoid(pred)
-                print(tf.reduce_max(pred))
-                print(tf.reduce_min(pred))
+                #print(tf.reduce_max(pred))
+                #print(tf.reduce_min(pred))
                 for x in range(64):
                     for y in range(64):
                         if pred[0,x,y,0] > 0.5 and true[0,x,y,0] > 0.5:
@@ -132,9 +128,11 @@ def train(argv):
                             wrong_picked += 1
                         elif pred[0,x,y,0] < 0.5 and true[0,x,y,0] > 0.5:
                             miss += 1
+                        else:
+                            background += 1
             print(
-                "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d" %
-                (e+1, picked, miss, wrong_picked)
+                    "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
+                (e+1, picked, miss, wrong_picked, background)
             )
     net.save_weights('yolopp_weights/', save_format='tf')
 
