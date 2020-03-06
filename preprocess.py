@@ -74,6 +74,12 @@ def mrc2array(inputs, image_size):
         dtype=np.float32
     )
     for i in range(len(inputs)):
+        inputs[i].data = inputs[i].data.astype(np.float32)
+        inputs[i].data /= 255
+        mean = np.mean(inputs[i].data)
+        std = np.std(inputs[i].data)
+        inputs[i].data -= mean
+        inputs[i].data /= std
         array[i,...] = np.expand_dims(inputs[i].data.astype(np.float32), axis=-1)
     return array
 

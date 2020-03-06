@@ -35,8 +35,8 @@ def train(argv):
 
     batchsize = FLAGS.batch_size
     epochs = FLAGS.epoch
-    learning_rate = 0.0005
-    decay = 0.95
+    learning_rate = 0.001
+    decay = 0.5
     decay_frequency = 20
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -67,7 +67,8 @@ def train(argv):
             y_true = np.copy(train_label[index:index+batchsize, ...])
             #x, y_true = augmenter.augment(x, y_true)
             with tf.GradientTape() as tape:
-                y_pred = net(x, training=True)
+                #y_pred = net(x, training=True)
+                y_pred = net(x)
                 #xy_loss, wh_loss, obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 obj_loss, no_obj_loss = cn.yolo_loss(y_pred, y_true)
                 #xy_loss = tf.reduce_mean(xy_loss)
@@ -91,7 +92,8 @@ def train(argv):
                 picked, miss, wrong_picked, background = 0, 0, 0, 0
                 x = np.expand_dims(valid_data[i, ...], axis=0)
                 y_true = np.expand_dims(valid_label[i, ...], axis=0)
-                y_pred = net(x, training=False)
+                #y_pred = net(x, training=True)
+                y_pred = net(x)
                 y_pred = tf.sigmoid(y_pred)
                 #print(tf.reduce_min(y_pred))
                 for x in range(64):
@@ -115,16 +117,9 @@ def train(argv):
                 picked, miss, wrong_picked, background = 0, 0, 0, 0
                 x = np.expand_dims(train_data[i, ...], axis=0)
                 true = np.expand_dims(train_label[i, ...], axis=0)
-                pred = net(x, training=True)
+                #pred = net(x, training=True)
+                pred = net(x)
                 pred = tf.sigmoid(pred)
-                true = tf.where(true>0.0, tf.ones_like(true), tf.zeros_like(true))
-                true = tf.cast(true, tf.float32)
-                mask = tf.squeeze(true, axis=-1)
-                diff = tf.square(true-pred)
-                diff = tf.reduce_sum(diff,axis=-1)
-                diff = diff * mask
-                obj, no = cn.yolo_loss(pred, true)
-                #print(tf.reduce_min(pred))
                 for x in range(64):
                     for y in range(64):
                         if pred[0,x,y,0] > 0.5 and true[0,x,y,0] > 0.5:

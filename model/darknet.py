@@ -15,7 +15,7 @@ class DarknetConv_BN_Leaky(tf.keras.Model):
 
     def call(self, input, training=False):
         x = self.conv(input)
-        x = self.batch_norm(x, training=training)
+        x = self.batch_norm(x)
         x = self.leaky_relu(x)
         return x
 

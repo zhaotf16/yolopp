@@ -53,11 +53,10 @@ class PhosaurusNet(tf.keras.models.Model):
         self.upsample = tf.keras.layers.UpSampling2D(2)
         self.concatenate = tf.keras.layers.Concatenate()
         # Dropout and output
-        self.dropout = tf.keras.layers.Dropout(0.5)
         #self.conv22 = tf.keras.layers.Conv2D(5, (1,1))
         self.conv22 = tf.keras.layers.Conv2D(1, (1,1))
  
-    def call(self, input, training=False):
+    def call(self, input, training=True):
         # Layer 1
         x = self.conv1(input, training=training)
         x = self.pool1(x)
@@ -93,8 +92,6 @@ class PhosaurusNet(tf.keras.models.Model):
         y = self.conv21(y, training=training)
         x = self.upsample(x)
         x = self.concatenate([x, y])
-        if training:
-            x = self.dropout(x)
         x = self.conv22(x)
         return x
 
