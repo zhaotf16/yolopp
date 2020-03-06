@@ -41,17 +41,19 @@ def train(argv):
     net = cn.PhosaurusNet()
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
-    data = mrcHelper.load_png_file("../mrc_sample_data")
-    label = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
+    #data = mrcHelper.load_png_file("../mrc_sample_data")
+    data = mrcHelper.load_png_file("../proteasome_1024")
+    #label = starHelper.read_all_star("../dataset/EMPIAR-10025/processed/labels")
+    label = starHelper.read_all_star("../mrc_data_1024")
     data = preprocess.mrc2array(data, image_size=1024)
     label = preprocess.star2label(label, 1024, 64,
         (220/7420*1024, 220/7676*1024)
     )
     # debug version
-    train_data = data[0:20:2, ...]
-    train_label = label[0:20:2, ...]
-    valid_data = data[1:21:2, ...]
-    valid_label = label[1:21:2, ...]
+    train_data = data[0:180, ...]
+    train_label = label[0:180, ...]
+    valid_data = data[180:196, ...]
+    valid_label = label[180:196, ...]
     valid_frequency = 10
     
     for e in range(epochs):
@@ -113,6 +115,7 @@ def train(argv):
                         "Validation epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
                     (e+1, picked, miss, wrong_picked, background)
                 )
+            '''
             for i in range(np.shape(train_data)[0]):
                 picked, miss, wrong_picked, background = 0, 0, 0, 0
                 x = np.expand_dims(train_data[i, ...], axis=0)
@@ -130,10 +133,12 @@ def train(argv):
                             miss += 1
                         else:
                             background += 1
-                print(
-                        "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
-                    (e+1, picked, miss, wrong_picked, background)
-                )
+                #print(
+                #        "While on training epoch: %d\tpicked: %d\tmiss: %d\twrong_picked:%d\tbackground:%d" %
+                #    (e+1, picked, miss, wrong_picked, background)
+                #)
+                '''
+    
     net.save_weights('yolopp_weights/', save_format='tf')
 
 if __name__ == '__main__':

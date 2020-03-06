@@ -23,10 +23,10 @@ def pick(argv):
     data_path = FLAGS.input_dir
     dst = FLAGS.output_dir
 
-    mrc = mrcHelper.load_mrc_file(data_path)
+    mrc = mrcHelper.load_png_file(data_path)
     array = preprocess.mrc2array(mrc, image_size=1024)
 
-    batchsize = 1
+    batchsize = 4
     net = cn.PhosaurusNet()
 
     #debug:
@@ -41,30 +41,30 @@ def pick(argv):
     batch_num = np.shape(array)[0] // batchsize
     #format of output files is STAR
     stars = []
-    stars = []
     for i in range(batch_num):
         index = i * batchsize
         x = array[index:index+batchsize, ...]
-        y_pred = net(x, training=False)
-        _, score = cn.yolo_head(y_pred)
+        y_pred = net(x)
+        #y_pred = net(x, training=Flase)
         for n in range(batchsize):
-            confidence = tf.squeeze(score[n, ...], axis=-1)
-            confidence = tf.sigmoid(confidence)
+            confidence = tf.sigmoid(y_pred)
             #print(tf.shape(confidence))
-            w, h = tf.shape(confidence)[0], tf.shape(confidence)[1]
+            w, h = tf.shape(confidence)[1], tf.shape(confidence)[2]
             star = starHelper.StarData(mrc[index+n].name, [])
+            print(star.name)
             for a in range(w):
                 for b in range(h):
                     #print("(%d, %d) true: %f, pred: %f" % (a, b, true_confidence[a, b], confidence[a, b]))
-                    if confidence[a, b] > 0.3:
+                    if confidence[n, a, b, 0] > 0.5:
                         star.content.append((
-                            (a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
-                        ))
+                            a*7420.0/64.0, b*7676.0/64.0
+                            #(a+tf.sigmoid(y_pred[n,a,b,0]))*7420.0/64.0, (b+tf.sigmoid(y_pred[n,a,b,1]))*7676.0/64.0
+                            ))
             stars.append(star)
     starHelper.write_star(stars, dst)
 if __name__ == '__main__':
     FLAGS = flags.FLAGS
     flags.DEFINE_string("input_dir", None, "dir of input micrographs")
     flags.DEFINE_string("output_dir", None, "dir of output predictions")
-    flags.DEFINE_string("weights_dir", "../yolopp_weights/", "dir or pretrained weights")
+    flags.DEFINE_string("weights_dir", "./yolopp_weights/", "dir or pretrained weights")
     app.run(pick)
